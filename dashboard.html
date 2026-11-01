@@ -1,0 +1,1568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VoteGuard AI — BVAS Tally Reconciliation Engine</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ─── Reset & Base ─────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:          #04070D;
+      --card-1:      #232C3B;
+      --card-2:      #171E2A;
+      --card-3:      #0F131C;
+      --border:      1px solid rgba(255,255,255,0.07);
+      --border-glow: 1px solid rgba(255,255,255,0.12);
+
+      --emerald: #10b981;
+      --crimson:  #ef4444;
+      --amber:    #f59e0b;
+      --orange:   #f97316;
+      --ice:      #60a5fa;
+      --muted:    #8898aa;
+      --text:     #e2e8f0;
+      --dim:      #4a5568;
+
+      --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+      --font-body: 'Outfit', system-ui, sans-serif;
+
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --radius-xl: 20px;
+
+      --shadow-card: 0 4px 24px rgba(0,0,0,0.5), 0 1px 4px rgba(0,0,0,0.3);
+      --shadow-glow-red: 0 0 20px rgba(239,68,68,0.12);
+      --shadow-glow-grn: 0 0 20px rgba(16,185,129,0.12);
+      --shadow-glow-amb: 0 0 20px rgba(245,158,11,0.12);
+      --shadow-glow-ora: 0 0 20px rgba(249,115,22,0.12);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 14px;
+      line-height: 1.6;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Subtle grid texture */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.012) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.012) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ─── Layout Wrapper ──────────────────────────────────────── */
+    .page-wrap {
+      position: relative;
+      z-index: 1;
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 0 24px 60px;
+    }
+
+    /* ─── Utility ─────────────────────────────────────────────── */
+    .mono   { font-family: var(--font-mono); }
+    .upper  { text-transform: uppercase; letter-spacing: 0.08em; }
+    .muted  { color: var(--muted); }
+    .dim    { color: var(--dim); }
+
+    .col-crimson { color: var(--crimson); }
+    .col-orange  { color: var(--orange); }
+    .col-amber   { color: var(--amber); }
+    .col-emerald { color: var(--emerald); }
+    .col-ice     { color: var(--ice); }
+
+    .section-gap { margin-top: 36px; }
+
+    .section-label {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--dim);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: rgba(255,255,255,0.06);
+    }
+
+    /* ─── Cards ───────────────────────────────────────────────── */
+    .card {
+      background: var(--card-1);
+      border: var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-card);
+    }
+    .card-inner {
+      background: var(--card-2);
+      border: var(--border);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-card);
+    }
+    .card-deep {
+      background: var(--card-3);
+      border: var(--border);
+      border-radius: var(--radius-sm);
+    }
+
+    /* ─── HEADER ──────────────────────────────────────────────── */
+    .header {
+      padding: 28px 0 24px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 20px;
+      border-bottom: var(--border);
+      margin-bottom: 32px;
+    }
+
+    .logo-block {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .logo-icon {
+      width: 48px;
+      height: 48px;
+      flex-shrink: 0;
+    }
+
+    .logo-text h1 {
+      font-family: var(--font-body);
+      font-size: 22px;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -0.3px;
+      line-height: 1.2;
+    }
+
+    .logo-text p {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      margin-top: 3px;
+    }
+
+    .header-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 12px;
+    }
+
+    .badge-ai4e {
+      background: rgba(245,158,11,0.12);
+      border: 1px solid rgba(245,158,11,0.3);
+      color: var(--amber);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 5px 12px;
+      border-radius: 99px;
+      font-weight: 600;
+    }
+
+    .stat-pills {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .stat-pill {
+      background: var(--card-2);
+      border: var(--border);
+      border-radius: 99px;
+      padding: 6px 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .stat-pill .pill-num {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .stat-pill .pill-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    .stat-pill .pill-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* ─── SUMMARY CARDS ───────────────────────────────────────── */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+
+    @media (max-width: 900px) { .summary-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 480px) { .summary-grid { grid-template-columns: 1fr; } }
+
+    .summary-card {
+      background: var(--card-1);
+      border: var(--border);
+      border-radius: var(--radius-lg);
+      padding: 24px 22px 0;
+      box-shadow: var(--shadow-card);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      position: relative;
+    }
+
+    .summary-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      opacity: 0.4;
+    }
+
+    .summary-card.critical { box-shadow: var(--shadow-card), var(--shadow-glow-red); }
+    .summary-card.critical::before { background: var(--crimson); }
+    .summary-card.suspect  { box-shadow: var(--shadow-card), var(--shadow-glow-ora); }
+    .summary-card.suspect::before  { background: var(--orange); }
+    .summary-card.watch    { box-shadow: var(--shadow-card), var(--shadow-glow-amb); }
+    .summary-card.watch::before    { background: var(--amber); }
+    .summary-card.clean    { box-shadow: var(--shadow-card), var(--shadow-glow-grn); }
+    .summary-card.clean::before    { background: var(--emerald); }
+
+    .summary-card .card-icon-bg {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      opacity: 0.07;
+      width: 56px;
+      height: 56px;
+    }
+
+    .summary-card .big-num {
+      font-family: var(--font-mono);
+      font-size: 48px;
+      font-weight: 700;
+      line-height: 1;
+      margin-top: 4px;
+    }
+
+    .summary-card .card-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      font-family: var(--font-mono);
+    }
+
+    .summary-card .card-sub {
+      font-size: 11px;
+      color: var(--dim);
+      padding-bottom: 18px;
+    }
+
+    .summary-card .card-bar {
+      height: 3px;
+      margin: 0 -22px;
+      border-radius: 0;
+    }
+
+    /* ─── FRAUD SIGNAL BARS ───────────────────────────────────── */
+    .fraud-card {
+      padding: 28px;
+    }
+
+    .fraud-row {
+      display: grid;
+      grid-template-columns: 200px 1fr 60px;
+      align-items: center;
+      gap: 16px;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .fraud-row:last-child { border-bottom: none; }
+
+    .fraud-label {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    .fraud-bar-track {
+      background: rgba(255,255,255,0.04);
+      border-radius: 99px;
+      height: 10px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .fraud-bar-fill {
+      height: 100%;
+      border-radius: 99px;
+      position: relative;
+      transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .fraud-bar-fill::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 30%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25));
+      border-radius: 99px;
+    }
+
+    .fraud-count {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 600;
+      text-align: right;
+    }
+
+    @media (max-width: 600px) {
+      .fraud-row { grid-template-columns: 130px 1fr 45px; gap: 10px; }
+      .fraud-label { font-size: 9px; }
+    }
+
+    /* ─── RISK TABLE ──────────────────────────────────────────── */
+    .table-wrap {
+      overflow-x: auto;
+      padding: 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 860px;
+    }
+
+    thead th {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--dim);
+      text-align: left;
+      padding: 14px 16px;
+      border-bottom: var(--border);
+      white-space: nowrap;
+      background: var(--card-3);
+    }
+
+    tbody tr {
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      transition: background 0.15s;
+    }
+
+    tbody tr:hover { background: rgba(255,255,255,0.025); }
+    tbody tr:last-child { border-bottom: none; }
+
+    td {
+      padding: 13px 16px;
+      font-size: 12px;
+      vertical-align: middle;
+      white-space: nowrap;
+    }
+
+    .td-code {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--ice);
+      letter-spacing: 0.04em;
+    }
+
+    .td-name {
+      font-weight: 500;
+      color: var(--text);
+      max-width: 160px;
+      white-space: normal;
+      line-height: 1.3;
+      font-size: 11px;
+    }
+
+    .td-state {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .td-num {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      text-align: right;
+    }
+
+    .risk-score-cell {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 14px;
+      text-align: center;
+      border-radius: var(--radius-sm);
+      padding: 6px 10px;
+      min-width: 52px;
+      display: inline-block;
+    }
+
+    .tier-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-family: var(--font-mono);
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 99px;
+    }
+
+    .tier-pill.critical { background: rgba(239,68,68,0.15); color: var(--crimson); border: 1px solid rgba(239,68,68,0.25); }
+    .tier-pill.suspect  { background: rgba(249,115,22,0.15); color: var(--orange); border: 1px solid rgba(249,115,22,0.25); }
+    .tier-pill.watch    { background: rgba(245,158,11,0.15); color: var(--amber);  border: 1px solid rgba(245,158,11,0.25); }
+    .tier-pill.clean    { background: rgba(16,185,129,0.15); color: var(--emerald);border: 1px solid rgba(16,185,129,0.25); }
+
+    .flag-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(96,165,250,0.12);
+      border: 1px solid rgba(96,165,250,0.2);
+      color: var(--ice);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 700;
+      width: 26px;
+      height: 26px;
+      border-radius: 6px;
+    }
+
+    /* ─── STATE HEATMAP ───────────────────────────────────────── */
+    .state-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 12px;
+    }
+
+    .state-card {
+      background: var(--card-2);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      border-left: 3px solid transparent;
+      border-top: var(--border);
+      border-right: var(--border);
+      border-bottom: var(--border);
+      transition: transform 0.15s;
+    }
+
+    .state-card:hover { transform: translateY(-2px); }
+
+    .state-card .sc-name {
+      font-size: 12px;
+      font-weight: 700;
+      color: #fff;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 10px;
+    }
+
+    .state-card .sc-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+
+    .state-card .sc-key {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--dim);
+    }
+
+    .state-card .sc-val {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    /* ─── WORST CASE DETAIL ───────────────────────────────────── */
+    .worst-card {
+      padding: 32px;
+    }
+
+    .worst-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 24px;
+      flex-wrap: wrap;
+      margin-bottom: 28px;
+    }
+
+    .worst-title h3 {
+      font-size: 18px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+
+    .worst-title .meta {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+    }
+
+    /* Radial progress bar (CSS only) */
+    .radial-wrap {
+      position: relative;
+      width: 140px;
+      height: 140px;
+      flex-shrink: 0;
+    }
+
+    .radial-track {
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      background: conic-gradient(
+        var(--crimson) calc(var(--pct) * 1%),
+        rgba(239,68,68,0.08) calc(var(--pct) * 1%)
+      );
+      --pct: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 30px rgba(239,68,68,0.25), inset 0 0 0 12px var(--card-2);
+    }
+
+    .radial-inner {
+      width: 100px;
+      height: 100px;
+      background: var(--card-2);
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border: var(--border);
+    }
+
+    .radial-num {
+      font-family: var(--font-mono);
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--crimson);
+      line-height: 1;
+    }
+
+    .radial-label {
+      font-family: var(--font-mono);
+      font-size: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      margin-top: 3px;
+    }
+
+    .worst-body {
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: 28px;
+      align-items: start;
+    }
+
+    @media (max-width: 900px) { .worst-body { grid-template-columns: 1fr; } }
+
+    .flags-list { display: flex; flex-direction: column; gap: 10px; }
+
+    .flag-row {
+      background: var(--card-3);
+      border: var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .flag-sev {
+      font-family: var(--font-mono);
+      font-size: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .flag-sev.critical { background: rgba(239,68,68,0.15); color: var(--crimson); }
+    .flag-sev.high     { background: rgba(249,115,22,0.15); color: var(--orange); }
+    .flag-sev.medium   { background: rgba(245,158,11,0.15); color: var(--amber); }
+
+    .flag-name {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text);
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    .flag-desc {
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .summary-table-wrap {
+      background: var(--card-3);
+      border: var(--border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+    }
+
+    .sum-table { width: 100%; border-collapse: collapse; }
+
+    .sum-table tr {
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .sum-table tr:last-child { border-bottom: none; }
+
+    .sum-table td {
+      padding: 11px 16px;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .sum-table .sum-key {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--dim);
+    }
+
+    .sum-table .sum-val {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 600;
+      text-align: right;
+    }
+
+    /* ─── FOOTER ──────────────────────────────────────────────── */
+    .footer {
+      margin-top: 52px;
+      padding: 28px 0;
+      border-top: var(--border);
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 20px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 700px) { .footer { grid-template-columns: 1fr; } }
+
+    .footer-left p {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.8;
+    }
+
+    .footer-left p strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .footer-left a {
+      color: var(--ice);
+      text-decoration: none;
+    }
+
+    .footer-left a:hover { text-decoration: underline; }
+
+    .footer-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 8px;
+    }
+
+    .partner-logos {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .partner-chip {
+      background: var(--card-2);
+      border: var(--border);
+      border-radius: 6px;
+      padding: 5px 10px;
+      font-family: var(--font-mono);
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    /* ─── Live pulse dot ─────────────────────────────────────── */
+    @keyframes pulse-ring {
+      0%   { transform: scale(1);   opacity: 1; }
+      100% { transform: scale(2.5); opacity: 0; }
+    }
+
+    .live-dot {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .live-dot::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      background: var(--emerald);
+      border-radius: 50%;
+      display: block;
+      flex-shrink: 0;
+    }
+
+    .live-dot::after {
+      content: '';
+      position: absolute;
+      left: 0; top: 0;
+      width: 6px;
+      height: 6px;
+      background: var(--emerald);
+      border-radius: 50%;
+      animation: pulse-ring 1.6s ease-out infinite;
+    }
+
+    /* ─── Scrollbar ───────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--card-3); }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 99px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.18); }
+
+    /* ─── Animations ──────────────────────────────────────────── */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .anim-in {
+      animation: fadeInUp 0.5s ease forwards;
+    }
+
+    .anim-d1 { animation-delay: 0.05s; opacity: 0; }
+    .anim-d2 { animation-delay: 0.12s; opacity: 0; }
+    .anim-d3 { animation-delay: 0.20s; opacity: 0; }
+    .anim-d4 { animation-delay: 0.28s; opacity: 0; }
+    .anim-d5 { animation-delay: 0.36s; opacity: 0; }
+    .anim-d6 { animation-delay: 0.44s; opacity: 0; }
+
+    /* divider */
+    .divider {
+      width: 1px;
+      height: 16px;
+      background: rgba(255,255,255,0.1);
+      display: inline-block;
+      margin: 0 4px;
+    }
+  </style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- ═══════════════════════════════════════════════════════
+       SECTION 1 — HEADER
+  ════════════════════════════════════════════════════════ -->
+  <header class="header anim-in">
+    <div class="logo-block">
+      <!-- Shield SVG icon (green stroke) -->
+      <svg class="logo-icon" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M24 4L8 10V22C8 31.94 15.07 41.26 24 44C32.93 41.26 40 31.94 40 22V10L24 4Z"
+          fill="rgba(16,185,129,0.08)" stroke="#10b981" stroke-width="1.8" stroke-linejoin="round"/>
+        <path d="M17 24L22 29L31 19"
+          stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="24" cy="24" r="8" fill="none" stroke="rgba(16,185,129,0.2)" stroke-width="1"/>
+      </svg>
+      <div class="logo-text">
+        <h1>VoteGuard AI</h1>
+        <p>BVAS Tally Reconciliation Engine</p>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <span class="badge-ai4e">AI4Elections Nigeria 2026</span>
+      <div class="stat-pills" id="header-pills">
+        <!-- rendered by JS -->
+      </div>
+    </div>
+  </header>
+
+  <!-- ═══════════════════════════════════════════════════════
+       SECTION 2 — NATIONAL SUMMARY CARDS
+  ════════════════════════════════════════════════════════ -->
+  <div class="section-label anim-in anim-d1">
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+      <rect x="1" y="1" width="10" height="10" rx="2" stroke="rgba(255,255,255,0.25)" stroke-width="1"/>
+      <rect x="3.5" y="3.5" width="5" height="5" rx="1" fill="rgba(255,255,255,0.12)"/>
+    </svg>
+    National Audit Summary
+  </div>
+
+  <div class="summary-grid anim-in anim-d1" id="summary-cards">
+    <!-- rendered by JS -->
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       SECTION 3 — FRAUD SIGNAL BREAKDOWN
+  ════════════════════════════════════════════════════════ -->
+  <div class="section-gap">
+    <div class="section-label anim-in anim-d2">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+        <path d="M6 1L1 4V8L6 11L11 8V4L6 1Z" stroke="rgba(255,255,255,0.25)" stroke-width="1" fill="none"/>
+        <line x1="6" y1="4" x2="6" y2="6.5" stroke="rgba(255,255,255,0.4)" stroke-width="1.2" stroke-linecap="round"/>
+        <circle cx="6" cy="8.5" r="0.6" fill="rgba(255,255,255,0.4)"/>
+      </svg>
+      Fraud Signal Breakdown
+    </div>
+
+    <div class="card fraud-card anim-in anim-d2" id="fraud-bars">
+      <!-- rendered by JS -->
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       SECTION 4 — POLLING UNIT RISK TABLE
+  ════════════════════════════════════════════════════════ -->
+  <div class="section-gap">
+    <div class="section-label anim-in anim-d3">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+        <rect x="1" y="2" width="10" height="1.5" rx="0.75" fill="rgba(255,255,255,0.2)"/>
+        <rect x="1" y="5.25" width="10" height="1.5" rx="0.75" fill="rgba(255,255,255,0.2)"/>
+        <rect x="1" y="8.5" width="10" height="1.5" rx="0.75" fill="rgba(255,255,255,0.2)"/>
+      </svg>
+      Polling Unit Risk Table — Sorted by Risk Score (Highest First)
+    </div>
+
+    <div class="card anim-in anim-d3" style="padding:0; overflow:hidden;">
+      <div class="table-wrap">
+        <table id="risk-table">
+          <thead>
+            <tr>
+              <th>PU Code</th>
+              <th>PU Name</th>
+              <th>State</th>
+              <th>LGA</th>
+              <th style="text-align:right">BVAS Accred.</th>
+              <th style="text-align:right">Total Votes</th>
+              <th style="text-align:center">Risk Score</th>
+              <th>Tier</th>
+              <th style="text-align:center">Flags</th>
+            </tr>
+          </thead>
+          <tbody id="risk-tbody">
+            <!-- rendered by JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       SECTION 5 — STATE HEATMAP SUMMARY
+  ════════════════════════════════════════════════════════ -->
+  <div class="section-gap">
+    <div class="section-label anim-in anim-d4">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+        <path d="M2 10L5 4L7 7L9 3L11 6" stroke="rgba(255,255,255,0.3)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="5" cy="4" r="0.8" fill="rgba(255,255,255,0.3)"/>
+        <circle cx="9" cy="3" r="0.8" fill="rgba(255,255,255,0.3)"/>
+      </svg>
+      State Heatmap Summary
+    </div>
+
+    <div class="state-grid anim-in anim-d4" id="state-heatmap">
+      <!-- rendered by JS -->
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       SECTION 6 — WORST CASE DETAIL PANEL
+  ════════════════════════════════════════════════════════ -->
+  <div class="section-gap">
+    <div class="section-label anim-in anim-d5">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+        <path d="M6 1.5L1.5 10.5H10.5L6 1.5Z" stroke="rgba(239,68,68,0.6)" stroke-width="1" fill="rgba(239,68,68,0.06)" stroke-linejoin="round"/>
+        <line x1="6" y1="5" x2="6" y2="7.5" stroke="rgba(239,68,68,0.7)" stroke-width="1.2" stroke-linecap="round"/>
+        <circle cx="6" cy="9" r="0.6" fill="rgba(239,68,68,0.7)"/>
+      </svg>
+      <span style="color:var(--crimson)">Worst Case Detail — Compound Fraud Detection</span>
+    </div>
+
+    <div class="card worst-card anim-in anim-d5" style="border-color: rgba(239,68,68,0.18); box-shadow: var(--shadow-card), 0 0 40px rgba(239,68,68,0.08);">
+      <div class="worst-header">
+        <div class="worst-title">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+            <span class="tier-pill critical" style="font-size:10px;padding:5px 12px;">
+              <svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M4 0.5L0.5 7.5H7.5L4 0.5Z" fill="currentColor" opacity="0.8"/></svg>
+              CRITICAL — TIER I
+            </span>
+            <span style="font-family:var(--font-mono);font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:0.08em;">Compound Fraud Profile</span>
+          </div>
+          <h3>Omoku South, Ward 3 — BVAS Unit</h3>
+          <div class="meta">PU CODE: RV/002/023/011 &nbsp;|&nbsp; STATE: RIVERS &nbsp;|&nbsp; LGA: ONELGA &nbsp;|&nbsp; WARD: 3</div>
+        </div>
+
+        <!-- CSS-only radial progress bar at 100% -->
+        <div class="radial-wrap">
+          <div class="radial-track" style="--pct:100">
+            <div class="radial-inner">
+              <span class="radial-num">100</span>
+              <span class="radial-label">Risk Score</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="worst-body">
+        <!-- Flags list -->
+        <div>
+          <div style="font-family:var(--font-mono);font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:var(--dim);margin-bottom:12px;">Detected Fraud Signals</div>
+          <div class="flags-list" id="worst-flags">
+            <!-- rendered by JS -->
+          </div>
+        </div>
+
+        <!-- Summary table -->
+        <div>
+          <div style="font-family:var(--font-mono);font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:var(--dim);margin-bottom:12px;">BVAS Reconciliation Summary</div>
+          <div class="summary-table-wrap">
+            <table class="sum-table" id="worst-sum-table">
+              <!-- rendered by JS -->
+            </table>
+          </div>
+
+          <div style="margin-top:16px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.15);border-radius:var(--radius-md);padding:14px 16px;">
+            <div style="font-family:var(--font-mono);font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:var(--crimson);margin-bottom:6px;">Engine Verdict</div>
+            <p style="font-size:12px;color:var(--muted);line-height:1.6;">All six primary fraud vectors detected simultaneously. Statistical probability of organic occurrence: <strong style="color:var(--crimson);font-family:var(--font-mono)">&lt; 0.001%</strong>. Recommend immediate INEC investigation and collation suspension.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       SECTION 7 — FOOTER
+  ════════════════════════════════════════════════════════ -->
+  <footer class="footer anim-in anim-d6">
+    <div class="footer-left">
+      <p>
+        <strong>Powered by VoteGuard AI v1.0</strong>
+        <span class="divider"></span>
+        Built for #AI4Elections Nigeria 2026
+      </p>
+      <p>
+        Author: <strong>Usman Bamidele</strong>
+        <span class="divider"></span>
+        <a href="https://github.com/amazing200guy1-a11y/voteguard-ai" target="_blank" rel="noopener">github.com/amazing200guy1-a11y/voteguard-ai</a>
+      </p>
+      <p style="margin-top:4px;" class="dim mono" style="font-size:10px;">
+        <span class="live-dot">LIVE AUDIT SESSION</span>
+        &nbsp;&nbsp;
+        <span id="live-clock" style="font-family:var(--font-mono);font-size:11px;color:var(--dim);"></span>
+      </p>
+    </div>
+    <div class="footer-right">
+      <div style="font-family:var(--font-mono);font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:var(--dim);text-align:right;margin-bottom:6px;">Ecosystem Partners</div>
+      <div class="partner-logos">
+        <span class="partner-chip">INEC</span>
+        <span class="partner-chip">Rise Networks</span>
+        <span class="partner-chip">Meta</span>
+        <span class="partner-chip">Google</span>
+        <span class="partner-chip">Microsoft</span>
+      </div>
+    </div>
+  </footer>
+
+</div><!-- /page-wrap -->
+
+<!-- ═══════════════════════════════════════════════════════
+     DATA + RENDER LOGIC
+════════════════════════════════════════════════════════ -->
+<script>
+"use strict";
+
+/* ────────────────────────────────────────────────────────
+   EMBEDDED AUDIT DATA  (computed from seed reconciliation)
+──────────────────────────────────────────────────────── */
+const AUDIT_DATA = {
+  meta: {
+    auditId:     "VGA-2026-001",
+    generatedAt: "2026-11-01T20:00:00Z",
+    version:     "1.0.0",
+    totalUnits:  10,
+    flaggedUnits: 8,
+    criticalAlerts: 3
+  },
+
+  /* 10 polling units — sorted by risk score descending (highest first) */
+  units: [
+    {
+      id:               1,
+      puCode:           "RV/002/023/011",
+      puName:           "Omoku South Ward 3 BVAS Unit",
+      state:            "Rivers",
+      lga:              "ONELGA",
+      ward:             "Ward 3",
+      bvasAccredited:   210,
+      declaredAccredited: 210,
+      registeredVoters: 380,
+      totalVotes:       415,
+      irevUploaded:     false,
+      riskScore:        100,
+      tier:             "CRITICAL",
+      flags: [
+        "OVERVOTING",
+        "SINGLE_PARTY_SWEEP",
+        "MISSING_IREV_UPLOAD",
+        "RESULT_REVERSAL",
+        "ACCREDITATION_GAP",
+        "IMPOSSIBLE_TURNOUT"
+      ],
+      collationVotes: 415,
+      bvasVotes: 210,
+      partyScores: { leading: 415, opposition: 0 }
+    },
+    {
+      id:               2,
+      puCode:           "FC/01/14/007",
+      puName:           "Abuja Municipal Area Council Hall",
+      state:            "FCT",
+      lga:              "AMAC",
+      ward:             "Garki",
+      bvasAccredited:   520,
+      declaredAccredited: 520,
+      registeredVoters: 700,
+      totalVotes:       760,
+      irevUploaded:     true,
+      riskScore:        62,
+      tier:             "CRITICAL",
+      flags: [
+        "OVERVOTING",
+        "ACCREDITATION_GAP"
+      ],
+      collationVotes: 760,
+      bvasVotes: 520,
+      partyScores: { leading: 680, opposition: 80 }
+    },
+    {
+      id:               3,
+      puCode:           "OS/09/05/003",
+      puName:           "Oduduwa Community Primary School",
+      state:            "Osun",
+      lga:              "Osogbo",
+      ward:             "Oduduwa",
+      bvasAccredited:   410,
+      declaredAccredited: 410,
+      registeredVoters: 390,
+      totalVotes:       420,
+      irevUploaded:     false,
+      riskScore:        58,
+      tier:             "CRITICAL",
+      flags: [
+        "IMPOSSIBLE_TURNOUT",
+        "MISSING_IREV_UPLOAD"
+      ],
+      collationVotes: 420,
+      bvasVotes: 410,
+      partyScores: { leading: 380, opposition: 40 }
+    },
+    {
+      id:               4,
+      puCode:           "DT/07/11/002",
+      puName:           "Delta State University Staff Club",
+      state:            "Delta",
+      lga:              "Abraka",
+      ward:             "DELSU",
+      bvasAccredited:   612,
+      declaredAccredited: 612,
+      registeredVoters: 850,
+      totalVotes:       780,
+      irevUploaded:     true,
+      riskScore:        38,
+      tier:             "SUSPECT",
+      flags: [
+        "RESULT_REVERSAL"
+      ],
+      collationVotes: 780,
+      bvasVotes: 612,
+      partyScores: { leading: 620, opposition: 160 }
+    },
+    {
+      id:               5,
+      puCode:           "KN/03/07/019",
+      puName:           "Fagge Central Polling Unit",
+      state:            "Kano",
+      lga:              "Fagge",
+      ward:             "Fagge A",
+      bvasAccredited:   345,
+      declaredAccredited: 345,
+      registeredVoters: 450,
+      totalVotes:       342,
+      irevUploaded:     true,
+      riskScore:        28,
+      tier:             "SUSPECT",
+      flags: [
+        "SINGLE_PARTY_SWEEP"
+      ],
+      collationVotes: 342,
+      bvasVotes: 345,
+      partyScores: { leading: 339, opposition: 3 }
+    },
+    {
+      id:               6,
+      puCode:           "KW/05/08/011",
+      puName:           "Ilorin East Model Primary School",
+      state:            "Kwara",
+      lga:              "Ilorin East",
+      ward:             "Ward 8",
+      bvasAccredited:   300,
+      declaredAccredited: 300,
+      registeredVoters: 500,
+      totalVotes:       300,
+      irevUploaded:     true,
+      riskScore:        22,
+      tier:             "WATCH",
+      flags: [
+        "SUSPICIOUS_ROUND"
+      ],
+      collationVotes: 300,
+      bvasVotes: 300,
+      partyScores: { leading: 190, opposition: 110 }
+    },
+    {
+      id:               7,
+      puCode:           "CR/11/04/006",
+      puName:           "Cross River Teachers House Unit",
+      state:            "Cross River",
+      lga:              "Calabar South",
+      ward:             "Ward 4",
+      bvasAccredited:   289,
+      declaredAccredited: 289,
+      registeredVoters: 410,
+      totalVotes:       285,
+      irevUploaded:     false,
+      riskScore:        20,
+      tier:             "WATCH",
+      flags: [
+        "MISSING_IREV_UPLOAD"
+      ],
+      collationVotes: 285,
+      bvasVotes: 289,
+      partyScores: { leading: 200, opposition: 85 }
+    },
+    {
+      id:               8,
+      puCode:           "NS/06/02/014",
+      puName:           "Nassarawa Toto LGA Hall",
+      state:            "Nassarawa",
+      lga:              "Toto",
+      ward:             "Ward 2",
+      bvasAccredited:   223,
+      declaredAccredited: 220,
+      registeredVoters: 350,
+      totalVotes:       219,
+      irevUploaded:     true,
+      riskScore:        8,
+      tier:             "WATCH",
+      flags: [
+        "ACCREDITATION_GAP"
+      ],
+      collationVotes: 219,
+      bvasVotes: 223,
+      partyScores: { leading: 140, opposition: 79 }
+    },
+    {
+      id:               9,
+      puCode:           "AN/08/01/002",
+      puName:           "St. Augustine Catholic School Hall",
+      state:            "Anambra",
+      lga:              "Awka South",
+      ward:             "Awka",
+      bvasAccredited:   430,
+      declaredAccredited: 430,
+      registeredVoters: 600,
+      totalVotes:       428,
+      irevUploaded:     true,
+      riskScore:        0,
+      tier:             "CLEAN",
+      flags: [],
+      collationVotes: 428,
+      bvasVotes: 430,
+      partyScores: { leading: 280, opposition: 148 }
+    },
+    {
+      id:               10,
+      puCode:           "FC/02/10/001",
+      puName:           "Kuje Area Council Model School",
+      state:            "FCT",
+      lga:              "Kuje",
+      ward:             "Kuje Central",
+      bvasAccredited:   310,
+      declaredAccredited: 310,
+      registeredVoters: 480,
+      totalVotes:       308,
+      irevUploaded:     true,
+      riskScore:        0,
+      tier:             "CLEAN",
+      flags: [],
+      collationVotes: 308,
+      bvasVotes: 310,
+      partyScores: { leading: 190, opposition: 118 }
+    }
+  ],
+
+  /* Fraud signal catalog */
+  fraudSignals: [
+    { name: "OVERVOTING",           count: 2, color: "#ef4444", severity: "CRITICAL", desc: "Total votes exceed BVAS accredited count" },
+    { name: "RESULT_REVERSAL",      count: 2, color: "#f97316", severity: "HIGH",     desc: "Collation figure altered from BVAS original" },
+    { name: "IMPOSSIBLE_TURNOUT",   count: 2, color: "#ef4444", severity: "CRITICAL", desc: "Votes exceed total registered voters" },
+    { name: "MISSING_IREV_UPLOAD",  count: 3, color: "#f59e0b", severity: "HIGH",     desc: "IReV result sheet not uploaded — transparency breach" },
+    { name: "SINGLE_PARTY_SWEEP",   count: 2, color: "#f97316", severity: "MEDIUM",   desc: "One party captures 95%+ of votes (anomaly)" },
+    { name: "ACCREDITATION_GAP",    count: 2, color: "#f59e0b", severity: "MEDIUM",   desc: "BVAS vs EC8A accreditation mismatch" },
+    { name: "SUSPICIOUS_ROUND",     count: 1, color: "#60a5fa", severity: "LOW",      desc: "Vote total is a suspiciously round number" }
+  ],
+
+  /* Worst case unit (Rivers) — full detail */
+  worstCase: {
+    puCode:             "RV/002/023/011",
+    puName:             "Omoku South Ward 3 BVAS Unit",
+    state:              "Rivers",
+    lga:                "ONELGA",
+    ward:               "Ward 3",
+    riskScore:          100,
+    tier:               "CRITICAL",
+    registeredVoters:   380,
+    bvasAccredited:     210,
+    declaredAccredited: 210,
+    totalVotes:         415,
+    irevUploaded:       false,
+    collationVotes:     415,
+    bvasOriginalVotes:  210,
+    flags: [
+      { name: "OVERVOTING",         severity: "critical", desc: "415 votes declared but only 210 voters were BVAS-accredited — 205 ghost votes detected." },
+      { name: "SINGLE_PARTY_SWEEP", severity: "critical", desc: "100% of 415 declared votes assigned to a single party. Opposition received 0 votes — statistically impossible." },
+      { name: "MISSING_IREV_UPLOAD",severity: "high",     desc: "No IReV result sheet uploaded to INEC portal, preventing independent verification." },
+      { name: "RESULT_REVERSAL",    severity: "critical", desc: "BVAS machine recorded 210 votes; collation sheet declares 415 — a delta of +205 (97.6% inflation)." },
+      { name: "ACCREDITATION_GAP",  severity: "high",     desc: "EC8A declares 210 accredited, matching BVAS but 205 excess votes remain unaccounted for in the reconciliation ledger." },
+      { name: "IMPOSSIBLE_TURNOUT", severity: "critical", desc: "Total declared votes (415) exceed total registered voters (380) by 35 votes (9.2% over-registration ratio)." }
+    ],
+    summary: [
+      { key: "Registered Voters",      val: "380",  highlight: false },
+      { key: "BVAS Accredited",         val: "210",  highlight: false },
+      { key: "Declared Accredited",     val: "210",  highlight: false },
+      { key: "Total Votes Declared",    val: "415",  highlight: true,  color: "#ef4444" },
+      { key: "BVAS Machine Votes",      val: "210",  highlight: true,  color: "#60a5fa" },
+      { key: "Vote Inflation",          val: "+205 (+97.6%)", highlight: true, color: "#ef4444" },
+      { key: "IReV Uploaded",           val: "NO",   highlight: true,  color: "#ef4444" },
+      { key: "Opposition Votes",        val: "0 (0.0%)", highlight: true, color: "#ef4444" }
+    ]
+  }
+};
+
+/* ────────────────────────────────────────────────────────
+   HELPER UTILITIES
+──────────────────────────────────────────────────────── */
+const $ = id => document.getElementById(id);
+
+function tierColor(tier) {
+  const map = { CRITICAL: '#ef4444', SUSPECT: '#f97316', WATCH: '#f59e0b', CLEAN: '#10b981' };
+  return map[tier] || '#8898aa';
+}
+
+function tierClass(tier) {
+  return tier.toLowerCase();
+}
+
+function scoreStyle(tier) {
+  const colors = {
+    CRITICAL: 'rgba(239,68,68,0.12)',
+    SUSPECT:  'rgba(249,115,22,0.12)',
+    WATCH:    'rgba(245,158,11,0.12)',
+    CLEAN:    'rgba(16,185,129,0.12)'
+  };
+  return `background:${colors[tier] || 'transparent'};color:${tierColor(tier)}`;
+}
+
+function fmtNum(n) {
+  return n.toLocaleString();
+}
+
+/* ────────────────────────────────────────────────────────
+   SECTION 1 — HEADER PILLS
+──────────────────────────────────────────────────────── */
+(function renderHeaderPills() {
+  const { totalUnits, flaggedUnits, criticalAlerts } = AUDIT_DATA.meta;
+  const pills = [
+    { num: fmtNum(totalUnits),    label: "Units Audited", dotColor: "#60a5fa" },
+    { num: fmtNum(flaggedUnits),  label: "Flagged Units",  dotColor: "#f59e0b" },
+    { num: fmtNum(criticalAlerts),label: "Critical Alerts",dotColor: "#ef4444" }
+  ];
+  $('header-pills').innerHTML = pills.map(p => `
+    <div class="stat-pill">
+      <span class="pill-dot" style="background:${p.dotColor};box-shadow:0 0 6px ${p.dotColor}66;"></span>
+      <span class="pill-num">${p.num}</span>
+      <span class="pill-label">${p.label}</span>
+    </div>
+  `).join('');
+})();
+
+/* ────────────────────────────────────────────────────────
+   SECTION 2 — NATIONAL SUMMARY CARDS
+──────────────────────────────────────────────────────── */
+(function renderSummaryCards() {
+  const units = AUDIT_DATA.units;
+  const counts = { CRITICAL: 0, SUSPECT: 0, WATCH: 0, CLEAN: 0 };
+  units.forEach(u => counts[u.tier]++);
+
+  const cards = [
+    {
+      tier: 'CRITICAL', cls: 'critical', color: '#ef4444', count: counts.CRITICAL,
+      label: 'CRITICAL UNITS', sub: 'Fraud confirmed — immediate action',
+      icon: `<path d="M24 4L8 10V22C8 31.94 15.07 41.26 24 44C32.93 41.26 40 31.94 40 22V10L24 4Z" fill="currentColor" stroke="none"/>`
+    },
+    {
+      tier: 'SUSPECT', cls: 'suspect', color: '#f97316', count: counts.SUSPECT,
+      label: 'SUSPECT UNITS', sub: 'High anomaly — review pending',
+      icon: `<path d="M24 8L6 40H42L24 8Z" fill="currentColor" stroke="none"/>`
+    },
+    {
+      tier: 'WATCH', cls: 'watch', color: '#f59e0b', count: counts.WATCH,
+      label: 'WATCH UNITS', sub: 'Minor flags — monitoring active',
+      icon: `<circle cx="24" cy="24" r="16" fill="currentColor" stroke="none"/>`
+    },
+    {
+      tier: 'CLEAN', cls: 'clean', color: '#10b981', count: counts.CLEAN,
+      label: 'CLEAN UNITS', sub: 'No anomalies detected',
+      icon: `<path d="M12 24L20 32L36 16" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`
+    }
+  ];
+
+  $('summary-cards').innerHTML = cards.map(c => `
+    <div class="summary-card ${c.cls}">
+      <svg class="card-icon-bg" viewBox="0 0 48 48" fill="none" style="color:${c.color};" aria-hidden="true">${c.icon}</svg>
+      <div class="card-label">${c.label}</div>
+      <div class="big-num" style="color:${c.color};">${c.count}</div>
+      <div class="card-sub">${c.sub}</div>
+      <div class="card-bar" style="background:${c.color};opacity:0.7;"></div>
+    </div>
+  `).join('');
+})();
+
+/* ────────────────────────────────────────────────────────
+   SECTION 3 — FRAUD SIGNAL BREAKDOWN (CSS bars)
+──────────────────────────────────────────────────────── */
+(function renderFraudBars() {
+  const signals = AUDIT_DATA.fraudSignals;
+  const maxCount = Math.max(...signals.map(s => s.count));
+
+  $('fraud-bars').innerHTML = signals.map(s => {
+    const pct = Math.round((s.count / maxCount) * 100);
+    return `
+      <div class="fraud-row">
+        <div>
+          <div class="fraud-label">${s.name}</div>
+          <div style="font-size:10px;color:var(--dim);margin-top:2px;font-family:var(--font-body);">${s.desc}</div>
+        </div>
+        <div class="fraud-bar-track">
+          <div class="fraud-bar-fill" style="width:${pct}%;background:linear-gradient(90deg, ${s.color}cc, ${s.color});"></div>
+        </div>
+        <div class="fraud-count" style="color:${s.color};">${s.count}</div>
+      </div>
+    `;
+  }).join('');
+})();
+
+/* ────────────────────────────────────────────────────────
+   SECTION 4 — POLLING UNIT RISK TABLE
+──────────────────────────────────────────────────────── */
+(function renderRiskTable() {
+  const sorted = [...AUDIT_DATA.units].sort((a, b) => b.riskScore - a.riskScore);
+
+  $('risk-tbody').innerHTML = sorted.map(u => `
+    <tr>
+      <td class="td-code">${u.puCode}</td>
+      <td class="td-name">${u.puName}</td>
+      <td class="td-state">${u.state}</td>
+      <td class="td-state" style="font-size:10px;">${u.lga}</td>
+      <td class="td-num" style="color:var(--ice);">${fmtNum(u.bvasAccredited)}</td>
+      <td class="td-num" style="color:${u.totalVotes > u.bvasAccredited ? 'var(--crimson)' : 'var(--text)'};">${fmtNum(u.totalVotes)}</td>
+      <td style="text-align:center;">
+        <span class="risk-score-cell" style="${scoreStyle(u.tier)}">${u.riskScore}</span>
+      </td>
+      <td>
+        <span class="tier-pill ${tierClass(u.tier)}">
+          <span style="width:5px;height:5px;background:currentColor;border-radius:50%;display:inline-block;opacity:0.8;flex-shrink:0;"></span>
+          ${u.tier}
+        </span>
+      </td>
+      <td style="text-align:center;">
+        <span class="flag-badge">${u.flags.length}</span>
+      </td>
+    </tr>
+  `).join('');
+})();
+
+/* ────────────────────────────────────────────────────────
+   SECTION 5 — STATE HEATMAP
+──────────────────────────────────────────────────────── */
+(function renderStateHeatmap() {
+  /* Aggregate by state */
+  const stateMap = {};
+  AUDIT_DATA.units.forEach(u => {
+    if (!stateMap[u.state]) {
+      stateMap[u.state] = { total: 0, flagged: 0, riskSum: 0 };
+    }
+    stateMap[u.state].total++;
+    if (u.flags.length > 0) stateMap[u.state].flagged++;
+    stateMap[u.state].riskSum += u.riskScore;
+  });
+
+  function borderColor(avg) {
+    if (avg > 70) return '#ef4444';
+    if (avg > 45) return '#f97316';
+    if (avg > 20) return '#f59e0b';
+    return '#10b981';
+  }
+
+  function valColor(avg) {
+    if (avg > 70) return 'var(--crimson)';
+    if (avg > 45) return 'var(--orange)';
+    if (avg > 20) return 'var(--amber)';
+    return 'var(--emerald)';
+  }
+
+  $('state-heatmap').innerHTML = Object.entries(stateMap).map(([state, d]) => {
+    const avg = Math.round(d.riskSum / d.total);
+    const bc  = borderColor(avg);
+    const vc  = valColor(avg);
+    return `
+      <div class="state-card" style="border-left-color:${bc};">
+        <div class="sc-name">${state}</div>
+        <div class="sc-row">
+          <span class="sc-key">Total PUs</span>
+          <span class="sc-val">${d.total}</span>
+        </div>
+        <div class="sc-row">
+          <span class="sc-key">Flagged</span>
+          <span class="sc-val" style="color:${d.flagged > 0 ? 'var(--amber)' : 'var(--emerald)'};">${d.flagged}</span>
+        </div>
+        <div class="sc-row">
+          <span class="sc-key">Avg Risk</span>
+          <span class="sc-val" style="color:${vc};">${avg}</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+})();
+
+/* ────────────────────────────────────────────────────────
+   SECTION 6 — WORST CASE DETAIL
+──────────────────────────────────────────────────────── */
+(function renderWorstCase() {
+  const wc = AUDIT_DATA.worstCase;
+
+  /* Flags list */
+  $('worst-flags').innerHTML = wc.flags.map(f => `
+    <div class="flag-row">
+      <span class="flag-sev ${f.severity}">${f.severity.toUpperCase()}</span>
+      <div>
+        <div class="flag-name">${f.name}</div>
+        <div class="flag-desc">${f.desc}</div>
+      </div>
+    </div>
+  `).join('');
+
+  /* Summary table */
+  $('worst-sum-table').innerHTML = wc.summary.map(row => `
+    <tr>
+      <td class="sum-key">${row.key}</td>
+      <td class="sum-val" style="color:${row.highlight ? row.color : 'var(--text)'};">${row.val}</td>
+    </tr>
+  `).join('');
+})();
+
+/* ────────────────────────────────────────────────────────
+   LIVE CLOCK
+──────────────────────────────────────────────────────── */
+(function startClock() {
+  function tick() {
+    const now = new Date();
+    const str = now.toUTCString().replace('GMT', 'UTC');
+    const el = $('live-clock');
+    if (el) el.textContent = str;
+  }
+  tick();
+  setInterval(tick, 1000);
+})();
+
+</script>
+</body>
+</html>

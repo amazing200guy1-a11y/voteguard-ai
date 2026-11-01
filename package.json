@@ -1,0 +1,25 @@
+{
+  "name": "voteguard-ai",
+  "version": "1.0.0",
+  "description": "AI-powered BVAS Tally Reconciliation Engine — detects electoral fraud by cross-checking BVAS accreditation data against Form EC8A results across Nigerian polling units",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node test/voteguard.test.js",
+    "seed": "node data/seed_polling_units.js"
+  },
+  "keywords": [
+    "nigeria",
+    "election",
+    "BVAS",
+    "INEC",
+    "IReV",
+    "fraud-detection",
+    "ai-safety",
+    "electoral-integrity",
+    "reconciliation",
+    "AI4Elections"
+  ],
+  "author": "Usman Bamidele",
+  "license": "MIT"
+}
