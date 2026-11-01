@@ -1,786 +1,1632 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>VoteGuard AI — BVAS Tally Reconciliation Engine</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
-<style>
-:root {
-  --bg: #04070D;
-  --bg-secondary: #080C14;
-  --bg-gunmetal-top: #232C3B;
-  --bg-gunmetal-mid: #171E2A;
-  --bg-gunmetal-base: #0F131C;
-  --bg-tray: #121824;
-  --bg-tray-hover: #161D2B;
-  --border: rgba(200,220,240,0.10);
-  --border-chamfer: rgba(200,220,240,0.18);
-  --border-hover: rgba(200,220,240,0.35);
-  --border-accent: rgba(200,220,240,0.25);
-  --text: #F1F5F9;
-  --text-dim: #94A3B8;
-  --text-slate: #8A98A8;
-  --text-muted: #64748B;
-  --platinum: #E2E8F0;
-  --platinum-bright: #F8FAFC;
-  --steel: #475569;
-  --emerald: #10B981;
-  --emerald-dim: rgba(16,185,129,0.12);
-  --crimson: #E11D48;
-  --crimson-dim: rgba(225,29,72,0.12);
-  --amber: #F59E0B;
-  --amber-dim: rgba(245,158,11,0.12);
-  --ice: #7DD3FC;
-  --ice-dim: rgba(125,211,252,0.10);
-  --orange: #F97316;
-  --orange-dim: rgba(249,115,22,0.12);
-  --pill-bg: #1E2838;
-  --pill-border: rgba(200,220,240,0.22);
-  --pill-text: #D8E8F8;
-  --font-mono: 'JetBrains Mono', monospace;
-  --font-heading: 'Outfit', sans-serif;
-  --font-body: 'Outfit', sans-serif;
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
-  --radius-xl: 18px;
-  --transition: 0.2s cubic-bezier(0.16,1,0.3,1);
-}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VoteGuard AI — Institutional BVAS Tally Sentinel &amp; Electoral Resilience</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    /* ════════════════════════════════════════════════════════
+       VOTEGUARD AI — Institutional Aerospace Titanium & Gunmetal
+       Defending Nigerian Electoral Integrity | S.51 Sentinel
+       ════════════════════════════════════════════════════════ */
 
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    :root {
+      --bg: #04070D;
+      --bg-secondary: #080C14;
 
-body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: var(--font-body);
-  min-height: 100vh;
-  -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
-}
-body::before {
-  content:"";
-  position:fixed;top:0;left:0;width:100%;height:100%;
-  background:
-    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(125,211,252,0.05), transparent 70%),
-    radial-gradient(circle at 10% 25%, rgba(0,112,186,0.04), transparent 45%),
-    linear-gradient(rgba(200,220,240,0.018) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(200,220,240,0.018) 1px, transparent 1px);
-  background-size:100% 100%,100% 100%,40px 40px,40px 40px;
-  pointer-events:none;z-index:0;
-}
+      /* Sculpted Gunmetal Titanium Stack */
+      --bg-gunmetal-top: #232C3B;
+      --bg-gunmetal-mid: #171E2A;
+      --bg-gunmetal-base: #0F131C;
+      --bg-tray: #121824;
+      --bg-tray-hover: #161D2B;
 
-.wrap{position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:0 1.5rem 5rem;}
+      /* Titanium Metallic Hairlines & Bevels */
+      --border: rgba(200, 220, 240, 0.10);
+      --border-chamfer: rgba(200, 220, 240, 0.18);
+      --border-hover: rgba(200, 220, 240, 0.35);
+      --border-accent: rgba(200, 220, 240, 0.25);
 
-/* ── TOPBAR ── */
-.topbar {
-  display:flex;align-items:center;gap:1rem;
-  padding:1.25rem 0 1rem;
-  border-bottom:1px solid var(--border);
-  margin-bottom:0;
-}
-.brand{display:flex;align-items:center;gap:0.85rem;}
-.brand-icon{
-  width:40px;height:40px;border-radius:var(--radius-md);
-  background:var(--emerald-dim);border:1px solid var(--border-chamfer);
-  box-shadow:inset 0 1px 0 rgba(200,220,240,0.06);
-  display:flex;align-items:center;justify-content:center;flex-shrink:0;
-}
-.brand-name{font-family:var(--font-heading);font-size:1.15rem;font-weight:800;color:var(--platinum-bright);letter-spacing:-0.3px;}
-.brand-name span{color:var(--emerald);}
-.brand-sep{width:1px;height:28px;background:var(--border);margin:0 0.25rem;}
-.brand-sub{font-family:var(--font-mono);font-size:0.68rem;color:var(--text-muted);letter-spacing:0.06em;text-transform:uppercase;}
-.topbar-pills{display:flex;gap:0.5rem;margin-left:auto;align-items:center;}
-.pill{
-  font-family:var(--font-mono);font-size:0.62rem;font-weight:700;
-  letter-spacing:0.1em;text-transform:uppercase;
-  padding:0.3rem 0.75rem;border-radius:20px;
-  background:var(--pill-bg);border:1px solid var(--pill-border);color:var(--pill-text);
-}
-.pill-amber{background:var(--amber-dim);border-color:rgba(245,158,11,0.3);color:var(--amber);}
-.pill-ice{background:var(--ice-dim);border-color:rgba(125,211,252,0.3);color:var(--ice);}
-.pill-crimson{background:var(--crimson-dim);border-color:rgba(225,29,72,0.3);color:var(--crimson);}
+      /* Typography & Monospace Colors */
+      --text: #F1F5F9;
+      --text-dim: #94A3B8;
+      --text-slate: #8A98A8;
+      --text-muted: #64748B;
 
-/* ── FIELD AUDIT CTA ── */
-.field-cta{
-  display:flex;align-items:center;justify-content:center;gap:0.75rem;
-  padding:0.9rem 1.5rem;
-  background:var(--emerald-dim);
-  border-bottom:1px solid rgba(16,185,129,0.2);
-  font-family:var(--font-mono);font-size:0.75rem;font-weight:700;
-  letter-spacing:0.12em;text-transform:uppercase;color:var(--emerald);
-  text-decoration:none;transition:background var(--transition);
-}
-.field-cta:hover{background:rgba(16,185,129,0.18);}
-.field-cta-sub{font-size:0.62rem;color:var(--text-muted);font-weight:400;letter-spacing:0.08em;}
+      --platinum: #E2E8F0;
+      --platinum-bright: #F8FAFC;
+      --steel: #475569;
 
-/* ── SECTION HEADER ── */
-.section{margin-top:2.5rem;}
-.section-label{
-  font-family:var(--font-mono);font-size:0.62rem;font-weight:700;
-  letter-spacing:0.16em;text-transform:uppercase;color:var(--text-muted);
-  display:flex;align-items:center;gap:0.6rem;margin-bottom:1rem;
-}
-.section-label::after{content:"";flex:1;height:1px;background:var(--border);}
+      --emerald: #10B981;
+      --emerald-dim: rgba(16, 185, 129, 0.12);
 
-/* ── METRIC CARDS ── */
-.metric-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;}
-@media(max-width:800px){.metric-grid{grid-template-columns:repeat(2,1fr);}}
-@media(max-width:480px){.metric-grid{grid-template-columns:1fr 1fr;}}
+      --crimson: #E11D48;
+      --crimson-dim: rgba(225, 29, 72, 0.12);
 
-.metric-card{
-  background:var(--bg-gunmetal-mid);
-  border:1px solid var(--border);
-  border-top:1px solid var(--border-chamfer);
-  border-radius:var(--radius-lg);
-  box-shadow:inset 0 1px 0 rgba(200,220,240,0.05),0 4px 24px rgba(0,0,0,0.4);
-  padding:1.25rem 1.25rem 0;
-  overflow:hidden;position:relative;
-}
-.metric-card-label{
-  font-family:var(--font-mono);font-size:0.6rem;font-weight:700;
-  letter-spacing:0.14em;text-transform:uppercase;color:var(--text-muted);
-  margin-bottom:0.6rem;
-}
-.metric-card-value{
-  font-family:var(--font-mono);font-size:3rem;font-weight:700;
-  line-height:1;margin-bottom:0.4rem;
-}
-.metric-card-sub{font-size:0.72rem;color:var(--text-slate);margin-bottom:1.25rem;line-height:1.4;}
-.metric-card-bar{height:3px;margin:0 -1.25rem;border-radius:0 0 var(--radius-lg) var(--radius-lg);}
-.mc-crimson .metric-card-value{color:var(--crimson);}
-.mc-crimson .metric-card-bar{background:linear-gradient(90deg,var(--crimson),rgba(225,29,72,0.3));}
-.mc-orange  .metric-card-value{color:var(--orange);}
-.mc-orange  .metric-card-bar{background:linear-gradient(90deg,var(--orange),rgba(249,115,22,0.3));}
-.mc-amber   .metric-card-value{color:var(--amber);}
-.mc-amber   .metric-card-bar{background:linear-gradient(90deg,var(--amber),rgba(245,158,11,0.3));}
-.mc-emerald .metric-card-value{color:var(--emerald);}
-.mc-emerald .metric-card-bar{background:linear-gradient(90deg,var(--emerald),rgba(16,185,129,0.3));}
+      --amber: #F59E0B;
+      --amber-dim: rgba(245, 158, 11, 0.12);
 
-/* ── SIGNAL MATRIX ── */
-.signal-grid{display:grid;grid-template-columns:1fr 280px;gap:1rem;}
-@media(max-width:800px){.signal-grid{grid-template-columns:1fr;}}
+      --ice: #7DD3FC;
+      --ice-dim: rgba(125, 211, 252, 0.10);
 
-.panel{
-  background:var(--bg-gunmetal-mid);
-  border:1px solid var(--border);
-  border-top:1px solid var(--border-chamfer);
-  border-radius:var(--radius-lg);
-  box-shadow:inset 0 1px 0 rgba(200,220,240,0.05),0 4px 24px rgba(0,0,0,0.4);
-  padding:1.5rem;
-}
-.panel-title{
-  font-family:var(--font-mono);font-size:0.62rem;font-weight:700;
-  letter-spacing:0.14em;text-transform:uppercase;color:var(--text-muted);
-  margin-bottom:1.25rem;display:flex;align-items:center;gap:0.5rem;
-}
+      --orange: #F97316;
+      --orange-dim: rgba(249, 115, 22, 0.12);
 
-.signal-row{margin-bottom:1rem;}
-.signal-row:last-child{margin-bottom:0;}
-.signal-meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:0.35rem;}
-.signal-name{font-family:var(--font-mono);font-size:0.72rem;font-weight:600;letter-spacing:0.04em;}
-.signal-count{
-  font-family:var(--font-mono);font-size:0.65rem;font-weight:700;
-  padding:0.15rem 0.5rem;border-radius:4px;
-}
-.signal-track{height:6px;background:var(--bg-gunmetal-base);border-radius:3px;overflow:hidden;}
-.signal-fill{height:100%;border-radius:3px;transition:width 1s cubic-bezier(0.16,1,0.3,1);}
+      /* Recessed Pill Badges */
+      --pill-bg: #1E2838;
+      --pill-border: rgba(200, 220, 240, 0.22);
+      --pill-text: #D8E8F8;
 
-.sc-crimson .signal-name{color:var(--crimson);}
-.sc-crimson .signal-count{background:var(--crimson-dim);color:var(--crimson);}
-.sc-crimson .signal-fill{background:linear-gradient(90deg,var(--crimson),rgba(225,29,72,0.5));box-shadow:0 0 8px rgba(225,29,72,0.4);}
-.sc-orange .signal-name{color:var(--orange);}
-.sc-orange .signal-count{background:var(--orange-dim);color:var(--orange);}
-.sc-orange .signal-fill{background:linear-gradient(90deg,var(--orange),rgba(249,115,22,0.5));}
-.sc-amber .signal-name{color:var(--amber);}
-.sc-amber .signal-count{background:var(--amber-dim);color:var(--amber);}
-.sc-amber .signal-fill{background:linear-gradient(90deg,var(--amber),rgba(245,158,11,0.5));}
+      --font-mono: 'JetBrains Mono', monospace;
+      --font-heading: 'Outfit', sans-serif;
+      --font-body: 'Outfit', sans-serif;
 
-.stat-stack{display:flex;flex-direction:column;gap:0.75rem;}
-.stat-box{
-  background:var(--bg-gunmetal-base);
-  border:1px solid var(--border);border-radius:var(--radius-md);
-  padding:1rem 1.25rem;
-}
-.stat-box-label{font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:0.35rem;}
-.stat-box-value{font-family:var(--font-mono);font-size:1.75rem;font-weight:700;line-height:1;}
-.stat-box-sub{font-size:0.68rem;color:var(--text-slate);margin-top:0.2rem;}
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --radius-xl: 18px;
+      --transition: 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
 
-/* ── RISK TABLE ── */
-.risk-table-wrap{
-  background:var(--bg-gunmetal-base);
-  border:1px solid var(--border);border-top:1px solid var(--border-chamfer);
-  border-radius:var(--radius-lg);
-  box-shadow:inset 0 1px 0 rgba(200,220,240,0.04),0 4px 24px rgba(0,0,0,0.4);
-  overflow:hidden;
-}
-.risk-table{width:100%;border-collapse:collapse;}
-.risk-table th{
-  font-family:var(--font-mono);font-size:0.58rem;font-weight:700;
-  letter-spacing:0.14em;text-transform:uppercase;color:var(--text-muted);
-  padding:0.85rem 1rem;text-align:left;
-  background:var(--bg-gunmetal-mid);
-  border-bottom:1px solid var(--border);
-  white-space:nowrap;
-}
-.risk-table td{
-  padding:0.8rem 1rem;font-size:0.78rem;
-  border-bottom:1px solid rgba(200,220,240,0.04);
-  vertical-align:middle;
-}
-.risk-table tr:last-child td{border-bottom:none;}
-.risk-table tr:hover td{background:var(--bg-tray-hover);}
-.td-code{font-family:var(--font-mono);font-size:0.68rem;color:var(--text-slate);}
-.td-name{font-weight:500;color:var(--text);}
-.td-state{font-size:0.72rem;color:var(--text-dim);}
-.td-num{font-family:var(--font-mono);font-weight:600;}
-.td-num-alert{font-family:var(--font-mono);font-weight:700;color:var(--crimson);background:var(--crimson-dim);padding:0.2rem 0.5rem;border-radius:4px;}
-.td-score{font-family:var(--font-mono);font-weight:700;font-size:0.85rem;padding:0.3rem 0.6rem;border-radius:var(--radius-sm);text-align:center;}
-.td-score-critical{background:var(--crimson-dim);color:var(--crimson);}
-.td-score-suspect{background:var(--orange-dim);color:var(--orange);}
-.td-score-watch{background:var(--amber-dim);color:var(--amber);}
-.td-score-clean{background:var(--emerald-dim);color:var(--emerald);}
-.tier-badge{
-  font-family:var(--font-mono);font-size:0.58rem;font-weight:700;
-  letter-spacing:0.1em;text-transform:uppercase;
-  padding:0.25rem 0.6rem;border-radius:20px;white-space:nowrap;
-}
-.tier-critical{background:var(--crimson-dim);color:var(--crimson);border:1px solid rgba(225,29,72,0.3);}
-.tier-suspect{background:var(--orange-dim);color:var(--orange);border:1px solid rgba(249,115,22,0.3);}
-.tier-watch{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(245,158,11,0.3);}
-.tier-clean{background:var(--emerald-dim);color:var(--emerald);border:1px solid rgba(16,185,129,0.3);}
-.flag-badge{
-  display:inline-flex;align-items:center;justify-content:center;
-  width:22px;height:22px;border-radius:50%;
-  font-family:var(--font-mono);font-size:0.65rem;font-weight:700;
-}
-.flag-badge-hot{background:var(--crimson-dim);color:var(--crimson);}
-.flag-badge-zero{color:var(--text-muted);}
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-/* ── STATE GRID ── */
-.state-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0.75rem;}
-@media(max-width:700px){.state-grid{grid-template-columns:repeat(2,1fr);}}
-.state-card{
-  background:var(--bg-gunmetal-base);
-  border:1px solid var(--border);
-  border-left-width:3px;
-  border-radius:var(--radius-md);
-  padding:1rem 1rem 1rem 1.1rem;
-}
-.state-name{font-family:var(--font-heading);font-weight:700;font-size:0.9rem;color:var(--platinum);margin-bottom:0.5rem;}
-.state-row{display:flex;justify-content:space-between;font-size:0.7rem;color:var(--text-slate);margin-bottom:0.2rem;}
-.state-row span:last-child{font-family:var(--font-mono);font-weight:600;}
-.state-risk-bar{height:2px;background:var(--bg-gunmetal-top);border-radius:1px;margin-top:0.6rem;overflow:hidden;}
-.state-risk-fill{height:100%;border-radius:1px;}
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      min-height: 100vh;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
 
-/* ── COMPOUND FRAUD DEEP DIVE ── */
-.deep-dive{
-  background:var(--bg-gunmetal-mid);
-  border:1px solid var(--border);
-  border-left:3px solid var(--crimson);
-  border-top:1px solid var(--border-chamfer);
-  border-radius:var(--radius-lg);
-  box-shadow:inset 0 1px 0 rgba(200,220,240,0.04),-4px 0 24px rgba(225,29,72,0.06),0 4px 24px rgba(0,0,0,0.5);
-  overflow:hidden;
-}
-.deep-dive-header{
-  padding:1.25rem 1.5rem;
-  border-bottom:1px solid var(--border);
-  background:rgba(225,29,72,0.04);
-  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;
-}
-.deep-dive-title{font-family:var(--font-mono);font-size:0.68rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--crimson);}
-.deep-dive-pu{font-family:var(--font-mono);font-size:0.65rem;color:var(--text-muted);}
-.risk-gauge-wrap{display:flex;align-items:center;gap:0.85rem;}
-.risk-gauge-label{font-family:var(--font-mono);font-size:0.62rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.1em;}
-.risk-gauge{height:6px;width:180px;background:var(--bg-gunmetal-base);border-radius:3px;overflow:hidden;}
-.risk-gauge-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--crimson),#ff6b8a);box-shadow:0 0 10px rgba(225,29,72,0.5);}
-.risk-score-badge{font-family:var(--font-mono);font-size:1.25rem;font-weight:700;color:var(--crimson);}
+    /* Ambient Titanium Sub-mesh Grid */
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background:
+        radial-gradient(ellipse 80% 50% at 50% -10%, rgba(125, 211, 252, 0.05), transparent 70%),
+        radial-gradient(circle at 10% 25%, rgba(16, 185, 129, 0.04), transparent 45%),
+        radial-gradient(circle at 90% 60%, rgba(225, 29, 72, 0.03), transparent 50%),
+        linear-gradient(rgba(200, 220, 240, 0.018) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(200, 220, 240, 0.018) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 100% 100%, 40px 40px, 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
 
-.deep-dive-body{padding:1.5rem;display:grid;grid-template-columns:1fr 300px;gap:1.5rem;}
-@media(max-width:800px){.deep-dive-body{grid-template-columns:1fr;}}
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 0 24px 80px;
+    }
 
-.flags-table{width:100%;border-collapse:collapse;}
-.flags-table th{font-family:var(--font-mono);font-size:0.58rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);padding:0.5rem 0.75rem;text-align:left;border-bottom:1px solid var(--border);}
-.flags-table td{padding:0.75rem;font-size:0.75rem;border-bottom:1px solid rgba(200,220,240,0.04);vertical-align:top;}
-.flags-table tr:last-child td{border-bottom:none;}
-.flag-code{font-family:var(--font-mono);font-size:0.68rem;font-weight:700;}
-.sev-critical{color:var(--crimson);}
-.sev-high{color:var(--orange);}
-.flag-detail{color:var(--text-dim);line-height:1.5;}
+    /* Precision Micro SVGs */
+    .ico {
+      width: 14px;
+      height: 14px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      flex-shrink: 0;
+    }
 
-.summary-table{width:100%;border-collapse:collapse;}
-.summary-table td{padding:0.65rem 0.75rem;font-size:0.75rem;border-bottom:1px solid rgba(200,220,240,0.04);}
-.summary-table tr:last-child td{border-bottom:none;}
-.summary-key{font-family:var(--font-mono);font-size:0.65rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;}
-.summary-val{font-family:var(--font-mono);font-weight:600;color:var(--text);text-align:right;}
-.summary-val-alert{font-family:var(--font-mono);font-weight:700;color:var(--crimson);}
+    .ico-lg {
+      width: 18px;
+      height: 18px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      flex-shrink: 0;
+    }
 
-.verdict-tribunal{
-  margin-top:1rem;
-  background:var(--crimson-dim);
-  border:1px solid rgba(225,29,72,0.3);
-  border-radius:var(--radius-md);
-  padding:1rem 1.25rem;
-  font-family:var(--font-mono);font-size:0.72rem;font-weight:700;
-  color:var(--crimson);letter-spacing:0.04em;line-height:1.6;
-  text-transform:uppercase;
-}
+    /* ═══════════════ TOP NAV BAR ═══════════════ */
+    .top-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 0 18px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 28px;
+    }
 
-/* ── HOW IT WORKS ── */
-.moat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;}
-@media(max-width:700px){.moat-grid{grid-template-columns:1fr;}}
-.moat-card{
-  background:var(--bg-gunmetal-base);
-  border:1px solid var(--border);
-  border-radius:var(--radius-lg);
-  padding:1.5rem;
-  position:relative;overflow:hidden;
-}
-.moat-card::before{
-  content:"";position:absolute;top:0;left:0;right:0;height:2px;border-radius:var(--radius-lg) var(--radius-lg) 0 0;
-}
-.mc-ice::before{background:linear-gradient(90deg,var(--ice),transparent);}
-.mc-em::before{background:linear-gradient(90deg,var(--emerald),transparent);}
-.mc-am::before{background:linear-gradient(90deg,var(--amber),transparent);}
-.moat-num{font-family:var(--font-mono);font-size:2rem;font-weight:700;margin-bottom:0.75rem;line-height:1;}
-.mc-ice .moat-num{color:var(--ice);}
-.mc-em  .moat-num{color:var(--emerald);}
-.mc-am  .moat-num{color:var(--amber);}
-.moat-title{font-family:var(--font-heading);font-size:0.9rem;font-weight:700;color:var(--platinum);margin-bottom:0.5rem;}
-.moat-desc{font-size:0.78rem;color:var(--text-dim);line-height:1.6;}
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
 
-/* ── FOOTER ── */
-.footer{
-  border-top:1px solid var(--border);
-  padding:2rem 0 1rem;
-  margin-top:3.5rem;
-  display:flex;flex-wrap:wrap;justify-content:space-between;gap:1rem;
-  font-size:0.72rem;color:var(--text-muted);
-}
-.footer-left{font-family:var(--font-mono);font-size:0.65rem;line-height:1.8;}
-.footer-right{text-align:right;font-family:var(--font-mono);font-size:0.65rem;line-height:1.8;}
-.footer-center{width:100%;text-align:center;}
-.partner-chips{display:flex;flex-wrap:wrap;justify-content:center;gap:0.5rem;margin-top:0.75rem;}
-.partner-chip{
-  font-family:var(--font-mono);font-size:0.58rem;letter-spacing:0.1em;text-transform:uppercase;
-  padding:0.25rem 0.75rem;border-radius:20px;
-  background:var(--bg-tray);border:1px solid var(--border);color:var(--text-slate);
-}
-.live-dot{
-  display:inline-flex;align-items:center;gap:0.4rem;
-  font-family:var(--font-mono);font-size:0.62rem;color:var(--emerald);
-}
-.live-dot::before{
-  content:"";width:6px;height:6px;border-radius:50%;background:var(--emerald);
-  animation:pulse 2s infinite;flex-shrink:0;
-}
+    .brand-crest {
+      width: 38px;
+      height: 38px;
+      background: linear-gradient(135deg, #1E2838 0%, #121824 100%);
+      border: 1px solid rgba(200, 220, 240, 0.25);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(200, 220, 240, 0.18);
+      color: var(--emerald);
+    }
 
-/* ── ANIMATIONS ── */
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.35}}
-@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
-.fade-up{animation:fadeUp 0.5s ease forwards;}
-.fade-up-2{animation:fadeUp 0.5s 0.1s ease both;}
-.fade-up-3{animation:fadeUp 0.5s 0.2s ease both;}
-.fade-up-4{animation:fadeUp 0.5s 0.3s ease both;}
-</style>
+    .brand-name {
+      font-family: var(--font-heading);
+      font-size: 19px;
+      font-weight: 800;
+      letter-spacing: -0.4px;
+      color: #fff;
+    }
+
+    .brand-name span {
+      color: var(--emerald);
+    }
+
+    .brand-code {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      font-weight: 700;
+      color: var(--text-slate);
+      padding: 3px 8px;
+      background: var(--bg-tray);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+    }
+
+    .nav-telemetry {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .titanium-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      background: var(--pill-bg);
+      border: 1px solid var(--pill-border);
+      border-radius: var(--radius-sm);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: var(--pill-text);
+      box-shadow: inset 0 1px 0 rgba(200, 220, 240, 0.14), 0 2px 6px rgba(0,0,0,0.4);
+      text-decoration: none;
+      transition: all var(--transition);
+    }
+
+    .titanium-pill:hover {
+      border-color: rgba(200, 220, 240, 0.4);
+      color: #fff;
+    }
+
+    .pill-launch-audit {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(18, 24, 36, 0.9) 100%);
+      border-color: rgba(16, 185, 129, 0.4);
+      color: var(--emerald);
+    }
+
+    .pill-launch-audit:hover {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.3) 0%, rgba(22, 29, 43, 1) 100%);
+      border-color: var(--emerald);
+      box-shadow: 0 0 16px rgba(16, 185, 129, 0.25), inset 0 1px 0 rgba(200, 220, 240, 0.2);
+    }
+
+    .pill-dot-emerald {
+      width: 6px;
+      height: 6px;
+      background: var(--emerald);
+      border-radius: 50%;
+      box-shadow: 0 0 8px rgba(16, 185, 129, 0.8);
+      animation: pulse 2s infinite;
+    }
+
+    .pill-dot-ice {
+      width: 6px;
+      height: 6px;
+      background: var(--ice);
+      border-radius: 50%;
+      box-shadow: 0 0 8px rgba(125, 211, 252, 0.8);
+    }
+
+    /* ═══════════════ COCKPIT HERO & HEADLINE ═══════════════ */
+    .cockpit-hero {
+      margin-bottom: 32px;
+    }
+
+    .hero-kicker-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .hero-kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 12px;
+      background: #1E2838;
+      border: 1px solid rgba(200, 220, 240, 0.22);
+      border-radius: var(--radius-sm);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: #D8E8F8;
+    }
+
+    .hero-headline {
+      font-size: clamp(28px, 4.2vw, 46px);
+      font-weight: 900;
+      letter-spacing: -0.035em;
+      line-height: 1.15;
+      margin-bottom: 12px;
+    }
+
+    .hero-headline-titanium {
+      background: linear-gradient(135deg, #FFFFFF 15%, #E2E8F0 50%, #8A98A8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-headline-emerald {
+      color: var(--emerald);
+      text-shadow: 0 0 24px rgba(16, 185, 129, 0.35);
+    }
+
+    .hero-sub {
+      font-size: 14.5px;
+      color: var(--text-slate);
+      max-width: 860px;
+      line-height: 1.6;
+      margin-bottom: 22px;
+    }
+
+    .hero-action-strip {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .btn-audit-hero {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 20px;
+      background: linear-gradient(180deg, #10B981 0%, #059669 100%);
+      color: #04070D;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      text-decoration: none;
+      border-radius: var(--radius-sm);
+      box-shadow: 0 4px 16px rgba(16, 185, 129, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+      transition: all var(--transition);
+    }
+
+    .btn-audit-hero:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 22px rgba(16, 185, 129, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    }
+
+    .telemetry-meta-tag {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--text-muted);
+      letter-spacing: 0.5px;
+    }
+
+    /* ═══════════════ 4-METRIC TITANIUM STRIP ═══════════════ */
+    .cockpit-metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+
+    @media (max-width: 900px) {
+      .cockpit-metrics-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 520px) {
+      .cockpit-metrics-grid { grid-template-columns: 1fr; }
+    }
+
+    .cockpit-metric-card {
+      background: linear-gradient(180deg, #232C3B 0%, #171E2A 50%, #0F131C 100%);
+      border: 1px solid rgba(200, 220, 240, 0.12);
+      border-radius: var(--radius-md);
+      padding: 16px 18px;
+      box-shadow:
+        0 8px 24px rgba(0, 0, 0, 0.55),
+        inset 0 1px 0 rgba(200, 220, 240, 0.16);
+      transition: transform var(--transition), border-color var(--transition);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cockpit-metric-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(200, 220, 240, 0.28);
+    }
+
+    .metric-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .metric-card-label {
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      font-weight: 700;
+      color: var(--text-slate);
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+    }
+
+    .metric-icon-wrap {
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      background: rgba(200, 220, 240, 0.05);
+      border: 1px solid rgba(200, 220, 240, 0.1);
+    }
+
+    .metric-card-val {
+      font-family: var(--font-mono);
+      font-size: 32px;
+      font-weight: 800;
+      line-height: 1;
+      margin-bottom: 6px;
+      letter-spacing: -0.5px;
+    }
+
+    .metric-card-sub {
+      font-size: 11.5px;
+      color: var(--text-slate);
+      line-height: 1.45;
+    }
+
+    .metric-bottom-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+    }
+
+    .mc-crimson .metric-card-val { color: var(--crimson); text-shadow: 0 0 18px rgba(225, 29, 72, 0.3); }
+    .mc-crimson .metric-icon-wrap { color: var(--crimson); }
+    .mc-crimson .metric-bottom-bar { background: linear-gradient(90deg, var(--crimson), transparent); }
+
+    .mc-orange .metric-card-val { color: var(--orange); text-shadow: 0 0 18px rgba(249, 115, 22, 0.3); }
+    .mc-orange .metric-icon-wrap { color: var(--orange); }
+    .mc-orange .metric-bottom-bar { background: linear-gradient(90deg, var(--orange), transparent); }
+
+    .mc-amber .metric-card-val { color: var(--amber); text-shadow: 0 0 18px rgba(245, 158, 11, 0.3); }
+    .mc-amber .metric-icon-wrap { color: var(--amber); }
+    .mc-amber .metric-bottom-bar { background: linear-gradient(90deg, var(--amber), transparent); }
+
+    .mc-emerald .metric-card-val { color: var(--emerald); text-shadow: 0 0 18px rgba(16, 185, 129, 0.3); }
+    .mc-emerald .metric-icon-wrap { color: var(--emerald); }
+    .mc-emerald .metric-bottom-bar { background: linear-gradient(90deg, var(--emerald), transparent); }
+
+    /* ═══════════════ SECTION HEADERS ═══════════════ */
+    .cockpit-section {
+      margin-bottom: 32px;
+    }
+
+    .section-label-strip {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+      color: var(--text-slate);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .section-label-strip::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ═══════════════ SIGNAL MATRIX & STAT STACK ═══════════════ */
+    .signal-cockpit-grid {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 16px;
+    }
+
+    @media (max-width: 860px) {
+      .signal-cockpit-grid { grid-template-columns: 1fr; }
+    }
+
+    .sculpted-panel {
+      background: linear-gradient(180deg, #232C3B 0%, #171E2A 50%, #0F131C 100%);
+      border: 1px solid rgba(200, 220, 240, 0.12);
+      border-radius: var(--radius-lg);
+      box-shadow:
+        0 16px 40px rgba(0, 0, 0, 0.65),
+        inset 0 1px 0 rgba(200, 220, 240, 0.18);
+      padding: 20px 22px;
+    }
+
+    .panel-header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .panel-heading {
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      font-weight: 800;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: var(--platinum-bright);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .telemetry-dots {
+      display: flex;
+      gap: 6px;
+    }
+
+    .tdot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+    }
+    .tdot.r { background: var(--crimson); box-shadow: 0 0 6px var(--crimson); }
+    .tdot.y { background: var(--amber); box-shadow: 0 0 6px var(--amber); }
+    .tdot.g { background: var(--emerald); box-shadow: 0 0 6px var(--emerald); }
+
+    .signal-item-row {
+      margin-bottom: 13px;
+    }
+    .signal-item-row:last-child { margin-bottom: 0; }
+
+    .signal-meta-line {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 5px;
+    }
+
+    .signal-title-text {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .signal-count-badge {
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: 4px;
+      letter-spacing: 0.5px;
+    }
+
+    .signal-track-chassis {
+      height: 6px;
+      background: var(--bg-gunmetal-base);
+      border-radius: 3px;
+      overflow: hidden;
+      border: 1px solid rgba(200, 220, 240, 0.05);
+    }
+
+    .signal-fill-bar {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 1s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .sig-crimson .signal-title-text { color: var(--crimson); }
+    .sig-crimson .signal-count-badge { background: var(--crimson-dim); color: var(--crimson); border: 1px solid rgba(225, 29, 72, 0.3); }
+    .sig-crimson .signal-fill-bar { background: linear-gradient(90deg, var(--crimson), #FF5470); box-shadow: 0 0 10px rgba(225, 29, 72, 0.5); }
+
+    .sig-orange .signal-title-text { color: var(--orange); }
+    .sig-orange .signal-count-badge { background: var(--orange-dim); color: var(--orange); border: 1px solid rgba(249, 115, 22, 0.3); }
+    .sig-orange .signal-fill-bar { background: linear-gradient(90deg, var(--orange), #FFA554); box-shadow: 0 0 10px rgba(249, 115, 22, 0.5); }
+
+    .sig-amber .signal-title-text { color: var(--amber); }
+    .sig-amber .signal-count-badge { background: var(--amber-dim); color: var(--amber); border: 1px solid rgba(245, 158, 11, 0.3); }
+    .sig-amber .signal-fill-bar { background: linear-gradient(90deg, var(--amber), #FFDE59); box-shadow: 0 0 10px rgba(245, 158, 11, 0.5); }
+
+    /* Stat stack right panel */
+    .stat-stack-col {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .sculpted-stat-box {
+      background: linear-gradient(180deg, #1C2432 0%, #121824 100%);
+      border: 1px solid rgba(200, 220, 240, 0.10);
+      border-radius: var(--radius-md);
+      padding: 16px 18px;
+      box-shadow: inset 0 1px 0 rgba(200, 220, 240, 0.12), 0 4px 14px rgba(0, 0, 0, 0.4);
+    }
+
+    .stat-box-title {
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: var(--text-slate);
+      margin-bottom: 6px;
+    }
+
+    .stat-box-number {
+      font-family: var(--font-mono);
+      font-size: 26px;
+      font-weight: 800;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    .stat-box-note {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* ═══════════════ RISK INTELLIGENCE TABLE ═══════════════ */
+    .table-titanium-wrap {
+      background: linear-gradient(180deg, #232C3B 0%, #171E2A 40%, #0F131C 100%);
+      border: 1px solid rgba(200, 220, 240, 0.14);
+      border-radius: var(--radius-lg);
+      box-shadow:
+        0 20px 50px rgba(0, 0, 0, 0.75),
+        inset 0 1px 0 rgba(200, 220, 240, 0.20);
+      overflow: hidden;
+    }
+
+    .table-scroll {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    .table-titanium {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    .table-titanium th {
+      background: linear-gradient(180deg, #263140 0%, #1C2432 100%);
+      padding: 12px 16px;
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      font-weight: 800;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: var(--text-slate);
+      border-bottom: 1px solid rgba(200, 220, 240, 0.12);
+      white-space: nowrap;
+    }
+
+    .table-titanium td {
+      padding: 12px 16px;
+      font-size: 12.5px;
+      border-bottom: 1px solid rgba(200, 220, 240, 0.05);
+      vertical-align: middle;
+    }
+
+    .table-titanium tr:last-child td { border-bottom: none; }
+    .table-titanium tr:hover td { background: rgba(200, 220, 240, 0.03); }
+
+    .pu-tag {
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      font-weight: 700;
+      color: var(--ice);
+      padding: 3px 8px;
+      background: #121824;
+      border: 1px solid rgba(200, 220, 240, 0.14);
+      border-radius: 4px;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+
+    .pu-unit-name {
+      font-weight: 600;
+      color: var(--platinum-bright);
+    }
+
+    .pu-state-pill {
+      font-size: 11px;
+      color: var(--text-dim);
+      font-family: var(--font-mono);
+    }
+
+    .val-mono {
+      font-family: var(--font-mono);
+      font-weight: 600;
+      color: var(--platinum);
+    }
+
+    .val-mono-alert {
+      font-family: var(--font-mono);
+      font-weight: 800;
+      color: var(--crimson);
+      background: var(--crimson-dim);
+      padding: 3px 7px;
+      border-radius: 4px;
+      border: 1px solid rgba(225, 29, 72, 0.25);
+    }
+
+    .risk-score-pill {
+      font-family: var(--font-mono);
+      font-weight: 800;
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: var(--radius-sm);
+      text-align: center;
+      display: inline-block;
+      min-width: 44px;
+    }
+
+    .score-critical { background: var(--crimson-dim); color: var(--crimson); border: 1px solid rgba(225, 29, 72, 0.35); box-shadow: 0 0 10px rgba(225, 29, 72, 0.2); }
+    .score-suspect  { background: var(--orange-dim); color: var(--orange); border: 1px solid rgba(249, 115, 22, 0.35); }
+    .score-watch    { background: var(--amber-dim); color: var(--amber); border: 1px solid rgba(245, 158, 11, 0.35); }
+    .score-clean    { background: var(--emerald-dim); color: var(--emerald); border: 1px solid rgba(16, 185, 129, 0.35); }
+
+    .tier-chip {
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 3px 9px;
+      border-radius: 12px;
+      white-space: nowrap;
+    }
+
+    .tier-critical { background: var(--crimson-dim); color: var(--crimson); border: 1px solid rgba(225, 29, 72, 0.35); }
+    .tier-suspect  { background: var(--orange-dim); color: var(--orange); border: 1px solid rgba(249, 115, 22, 0.35); }
+    .tier-watch    { background: var(--amber-dim); color: var(--amber); border: 1px solid rgba(245, 158, 11, 0.35); }
+    .tier-clean    { background: var(--emerald-dim); color: var(--emerald); border: 1px solid rgba(16, 185, 129, 0.35); }
+
+    .flags-circle {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 800;
+    }
+
+    .flags-hot { background: var(--crimson-dim); color: var(--crimson); border: 1px solid rgba(225, 29, 72, 0.35); }
+    .flags-zero { color: var(--text-muted); }
+
+    /* ═══════════════ STATE GRID ═══════════════ */
+    .state-intelligence-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+    @media (max-width: 800px) {
+      .state-intelligence-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 520px) {
+      .state-intelligence-grid { grid-template-columns: 1fr; }
+    }
+
+    .state-card-chassis {
+      background: linear-gradient(180deg, #1E2838 0%, #121824 100%);
+      border: 1px solid rgba(200, 220, 240, 0.10);
+      border-left-width: 3px;
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+      box-shadow: inset 0 1px 0 rgba(200, 220, 240, 0.10), 0 4px 14px rgba(0, 0, 0, 0.45);
+      transition: transform var(--transition);
+    }
+    .state-card-chassis:hover {
+      transform: translateY(-2px);
+    }
+
+    .state-card-header {
+      font-family: var(--font-heading);
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--platinum-bright);
+      margin-bottom: 8px;
+    }
+
+    .state-data-line {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text-slate);
+      margin-bottom: 4px;
+    }
+    .state-data-line span:last-child {
+      font-family: var(--font-mono);
+      font-weight: 700;
+    }
+
+    .state-micro-bar-wrap {
+      height: 3px;
+      background: var(--bg-gunmetal-base);
+      border-radius: 2px;
+      margin-top: 8px;
+      overflow: hidden;
+    }
+    .state-micro-bar-fill {
+      height: 100%;
+      border-radius: 2px;
+    }
+
+    /* ═══════════════ COMPOUND FRAUD DEEP DIVE ═══════════════ */
+    .deepdive-titanium-deck {
+      background: linear-gradient(180deg, #232C3B 0%, #171E2A 40%, #0F131C 100%);
+      border: 1px solid rgba(200, 220, 240, 0.14);
+      border-left: 4px solid var(--crimson);
+      border-radius: var(--radius-lg);
+      box-shadow:
+        0 24px 60px rgba(0, 0, 0, 0.8),
+        -4px 0 24px rgba(225, 29, 72, 0.15),
+        inset 0 1px 0 rgba(200, 220, 240, 0.20);
+      overflow: hidden;
+    }
+
+    .deepdive-header-bar {
+      padding: 16px 22px;
+      background: linear-gradient(90deg, rgba(225, 29, 72, 0.12) 0%, rgba(23, 30, 42, 0.6) 100%);
+      border-bottom: 1px solid rgba(200, 220, 240, 0.10);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .deepdive-title-wrap h3 {
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      font-weight: 800;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: var(--crimson);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .deepdive-pu-sub {
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      color: var(--text-slate);
+      margin-top: 3px;
+    }
+
+    .deepdive-gauge-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .gauge-label-text {
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      color: var(--text-slate);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .gauge-track-chassis {
+      height: 7px;
+      width: 160px;
+      background: var(--bg-gunmetal-base);
+      border-radius: 4px;
+      overflow: hidden;
+      border: 1px solid rgba(200, 220, 240, 0.1);
+    }
+
+    .gauge-fill-glow {
+      height: 100%;
+      border-radius: 4px;
+      background: linear-gradient(90deg, var(--crimson), #FF5470);
+      box-shadow: 0 0 12px rgba(225, 29, 72, 0.6);
+    }
+
+    .gauge-score-digits {
+      font-family: var(--font-mono);
+      font-size: 18px;
+      font-weight: 900;
+      color: var(--crimson);
+      text-shadow: 0 0 12px rgba(225, 29, 72, 0.5);
+    }
+
+    .deepdive-content-grid {
+      padding: 22px;
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 22px;
+    }
+    @media (max-width: 860px) {
+      .deepdive-content-grid { grid-template-columns: 1fr; }
+    }
+
+    .flags-titanium-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .flags-titanium-table th {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: var(--text-slate);
+      padding: 8px 10px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    .flags-titanium-table td {
+      padding: 10px;
+      font-size: 11.5px;
+      border-bottom: 1px solid rgba(200, 220, 240, 0.04);
+      vertical-align: top;
+    }
+    .flags-titanium-table tr:last-child td { border-bottom: none; }
+
+    .flag-code-badge {
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+    }
+
+    .legal-alert-box {
+      margin-top: 16px;
+      background: rgba(225, 29, 72, 0.10);
+      border: 1px solid rgba(225, 29, 72, 0.35);
+      border-radius: var(--radius-md);
+      padding: 14px 18px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      color: #FFA3B4;
+      letter-spacing: 0.5px;
+      line-height: 1.6;
+      box-shadow: inset 0 1px 0 rgba(225, 29, 72, 0.2);
+    }
+
+    .summary-spec-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #121824;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+    }
+    .summary-spec-table td {
+      padding: 9px 12px;
+      font-size: 11.5px;
+      border-bottom: 1px solid rgba(200, 220, 240, 0.04);
+    }
+    .summary-spec-table tr:last-child td { border-bottom: none; }
+    .spec-key {
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      color: var(--text-slate);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+    .spec-val {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      text-align: right;
+      color: var(--platinum-bright);
+    }
+    .spec-val-alert {
+      color: var(--crimson);
+      text-shadow: 0 0 8px rgba(225, 29, 72, 0.4);
+    }
+
+    /* ═══════════════ MOAT SECTION ═══════════════ */
+    .moat-cards-deck {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+    @media (max-width: 800px) {
+      .moat-cards-deck { grid-template-columns: 1fr; }
+    }
+
+    .moat-chassis-card {
+      background: linear-gradient(180deg, #232C3B 0%, #171E2A 50%, #0F131C 100%);
+      border: 1px solid rgba(200, 220, 240, 0.12);
+      border-radius: var(--radius-lg);
+      padding: 22px;
+      box-shadow:
+        0 14px 34px rgba(0, 0, 0, 0.6),
+        inset 0 1px 0 rgba(200, 220, 240, 0.16);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .moat-chassis-card::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+    }
+
+    .mc-neon-ice::before    { background: linear-gradient(90deg, var(--ice), transparent); }
+    .mc-neon-em::before     { background: linear-gradient(90deg, var(--emerald), transparent); }
+    .mc-neon-amber::before  { background: linear-gradient(90deg, var(--amber), transparent); }
+
+    .moat-card-num {
+      font-family: var(--font-mono);
+      font-size: 32px;
+      font-weight: 800;
+      line-height: 1;
+      margin-bottom: 12px;
+    }
+
+    .mc-neon-ice .moat-card-num   { color: var(--ice); }
+    .mc-neon-em .moat-card-num    { color: var(--emerald); }
+    .mc-neon-amber .moat-card-num { color: var(--amber); }
+
+    .moat-card-title {
+      font-family: var(--font-heading);
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--platinum-bright);
+      margin-bottom: 8px;
+    }
+
+    .moat-card-desc {
+      font-size: 13px;
+      color: var(--text-slate);
+      line-height: 1.6;
+    }
+
+    /* ═══════════════ INSTITUTIONAL FOOTER ═══════════════ */
+    .institutional-footer {
+      border-top: 1px solid var(--border);
+      padding: 36px 0 16px;
+      margin-top: 50px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .footer-top-strip {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .footer-meta-block {
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      color: var(--text-slate);
+      line-height: 1.8;
+    }
+    .footer-meta-block strong {
+      color: var(--platinum-bright);
+    }
+
+    .footer-author-block {
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      text-align: right;
+      color: var(--text-slate);
+      line-height: 1.8;
+    }
+    .footer-author-block a {
+      color: var(--ice);
+      text-decoration: none;
+    }
+
+    .partner-chips-deck {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(200, 220, 240, 0.05);
+    }
+
+    .partner-chip-pill {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 4px 12px;
+      border-radius: 20px;
+      background: var(--bg-tray);
+      border: 1px solid var(--border);
+      color: var(--text-slate);
+    }
+
+    .live-sentinel-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--emerald);
+      letter-spacing: 0.8px;
+      justify-content: center;
+      margin-top: 6px;
+    }
+
+    /* Animations */
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+    .fade-up { animation: fadeIn 0.4s ease forwards; }
+  </style>
 </head>
 <body>
 
-<!-- ── TOPBAR ── -->
-<header>
-<div class="wrap">
-<div class="topbar">
-  <div class="brand">
-    <div class="brand-icon">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
-    </div>
-    <div>
-      <div class="brand-name">Vote<span>Guard</span> AI</div>
-    </div>
-    <div class="brand-sep"></div>
-    <div class="brand-sub">BVAS Tally Reconciliation Engine</div>
-  </div>
-  <div class="topbar-pills">
-    <span class="pill pill-amber">Track 4 — Electoral Cybersecurity</span>
-    <span class="pill pill-ice">AI4Elections Nigeria 2026</span>
-  </div>
-</div>
-</div>
+<div class="container">
 
-<!-- Field Audit CTA -->
-<a class="field-cta" href="audit.html">
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-  Launch Field Audit Tool — Photo-to-Proof Pipeline
-  <span class="field-cta-sub">&#8594; Open BVAS Screen Integrity Audit at your polling unit</span>
-</a>
-</header>
-
-<div class="wrap">
-
-<!-- ── SECTION 1: THREAT OVERVIEW ── -->
-<div class="section fade-up">
-  <div class="section-label">
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-    National Threat Overview
-  </div>
-  <div class="metric-grid">
-    <div class="metric-card mc-crimson">
-      <div class="metric-card-label">Critical Units</div>
-      <div class="metric-card-value">3</div>
-      <div class="metric-card-sub">Immediate intervention required</div>
-      <div class="metric-card-bar"></div>
-    </div>
-    <div class="metric-card mc-orange">
-      <div class="metric-card-label">Suspect Units</div>
-      <div class="metric-card-value">2</div>
-      <div class="metric-card-sub">Statistical anomalies detected</div>
-      <div class="metric-card-bar"></div>
-    </div>
-    <div class="metric-card mc-amber">
-      <div class="metric-card-label">Watch Units</div>
-      <div class="metric-card-value">3</div>
-      <div class="metric-card-sub">Monitoring active</div>
-      <div class="metric-card-bar"></div>
-    </div>
-    <div class="metric-card mc-emerald">
-      <div class="metric-card-label">Clean Units</div>
-      <div class="metric-card-value">2</div>
-      <div class="metric-card-sub">Tally independently verified</div>
-      <div class="metric-card-bar"></div>
-    </div>
-  </div>
-</div>
-
-<!-- ── SECTION 2: SIGNAL MATRIX ── -->
-<div class="section fade-up-2">
-  <div class="section-label">
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-    Electoral Fraud Signal Matrix
-  </div>
-  <div class="signal-grid">
-    <div class="panel">
-      <div class="panel-title">
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/></svg>
-        Detected Fraud Signals
+  <!-- ═══════════════ TOP NAVIGATION ═══════════════ -->
+  <header class="top-nav fade-up">
+    <div class="brand-group">
+      <div class="brand-crest">
+        <svg class="ico-lg" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
       </div>
-
-      <div class="signal-row sc-crimson">
-        <div class="signal-meta"><span class="signal-name">OVERVOTING</span><span class="signal-count">3</span></div>
-        <div class="signal-track"><div class="signal-fill" style="width:100%"></div></div>
-      </div>
-      <div class="signal-row sc-crimson">
-        <div class="signal-meta"><span class="signal-name">RESULT_REVERSAL</span><span class="signal-count">2</span></div>
-        <div class="signal-track"><div class="signal-fill" style="width:67%"></div></div>
-      </div>
-      <div class="signal-row sc-crimson">
-        <div class="signal-meta"><span class="signal-name">IMPOSSIBLE_TURNOUT</span><span class="signal-count">2</span></div>
-        <div class="signal-track"><div class="signal-fill" style="width:67%"></div></div>
-      </div>
-      <div class="signal-row sc-orange">
-        <div class="signal-meta"><span class="signal-name">MISSING_IREV_UPLOAD</span><span class="signal-count">3</span></div>
-        <div class="signal-track"><div class="signal-fill" style="width:100%"></div></div>
-      </div>
-      <div class="signal-row sc-orange">
-        <div class="signal-meta"><span class="signal-name">SINGLE_PARTY_SWEEP</span><span class="signal-count">2</span></div>
-        <div class="signal-track"><div class="signal-fill" style="width:67%"></div></div>
-      </div>
-      <div class="signal-row sc-amber">
-        <div class="signal-meta"><span class="signal-name">ACCREDITATION_GAP</span><span class="signal-count">2</span></div>
-        <div class="signal-track"><div class="signal-fill" style="width:67%"></div></div>
-      </div>
-      <div class="signal-row sc-amber">
-        <div class="signal-meta"><span class="signal-name">SUSPICIOUS_ROUND</span><span class="signal-count">1</span></div>
-        <div class="signal-track"><div class="signal-fill" style="width:33%"></div></div>
-      </div>
-    </div>
-
-    <div class="stat-stack">
-      <div class="stat-box">
-        <div class="stat-box-label">Total Flags Raised</div>
-        <div class="stat-box-value" style="color:var(--crimson)">15</div>
-        <div class="stat-box-sub">Across 10 audited units</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-box-label">Units Flagged</div>
-        <div class="stat-box-value" style="color:var(--orange)">8<span style="font-size:1rem;color:var(--text-muted)"> / 10</span></div>
-        <div class="stat-box-sub">80% flag rate nationally</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-box-label">Electoral Act S.51</div>
-        <div class="stat-box-value" style="color:var(--amber)">3</div>
-        <div class="stat-box-sub">Direct violations detected</div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ── SECTION 3: RISK TABLE ── -->
-<div class="section fade-up-3">
-  <div class="section-label">
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18"/></svg>
-    Polling Unit Risk Intelligence
-  </div>
-  <div class="risk-table-wrap">
-    <table class="risk-table">
-      <thead>
-        <tr>
-          <th>PU Code</th>
-          <th>Unit Name</th>
-          <th>State</th>
-          <th>BVAS Accredited</th>
-          <th>Votes Cast</th>
-          <th>Risk Score</th>
-          <th>Tier</th>
-          <th>Flags</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td class="td-code">22/07/02/055</td>
-          <td class="td-name">Rivers State Govt School C</td>
-          <td class="td-state">Rivers</td>
-          <td class="td-num">600</td>
-          <td><span class="td-num-alert">905</span></td>
-          <td><span class="td-score td-score-critical">100</span></td>
-          <td><span class="tier-badge tier-critical">Critical</span></td>
-          <td><span class="flag-badge flag-badge-hot">6</span></td>
-        </tr>
-        <tr>
-          <td class="td-code">31/11/06/004</td>
-          <td class="td-name">Oduduwa Community School</td>
-          <td class="td-state">Osun</td>
-          <td class="td-num">850</td>
-          <td><span class="td-num-alert">920</span></td>
-          <td><span class="td-score td-score-critical">95</span></td>
-          <td><span class="tier-badge tier-critical">Critical</span></td>
-          <td><span class="flag-badge flag-badge-hot">3</span></td>
-        </tr>
-        <tr>
-          <td class="td-code">25/04/09/022</td>
-          <td class="td-name">Garki Model Primary School</td>
-          <td class="td-state">FCT Abuja</td>
-          <td class="td-num">520</td>
-          <td><span class="td-num-alert">760</span></td>
-          <td><span class="td-score td-score-critical">75</span></td>
-          <td><span class="tier-badge tier-critical">Critical</span></td>
-          <td><span class="flag-badge flag-badge-hot">1</span></td>
-        </tr>
-        <tr>
-          <td class="td-code">07/06/04/018</td>
-          <td class="td-name">Delta State University Clinic PU</td>
-          <td class="td-state">Delta</td>
-          <td class="td-num">612</td>
-          <td class="td-num">612</td>
-          <td><span class="td-score td-score-suspect">45</span></td>
-          <td><span class="tier-badge tier-suspect">Suspect</span></td>
-          <td><span class="flag-badge flag-badge-hot">1</span></td>
-        </tr>
-        <tr>
-          <td class="td-code">12/02/01/033</td>
-          <td class="td-name">Fagge Ward C Community Centre</td>
-          <td class="td-state">Kano</td>
-          <td class="td-num">1,800</td>
-          <td class="td-num">1,800</td>
-          <td><span class="td-score td-score-suspect">40</span></td>
-          <td><span class="tier-badge tier-suspect">Suspect</span></td>
-          <td><span class="flag-badge flag-badge-hot">1</span></td>
-        </tr>
-        <tr>
-          <td class="td-code">20/09/03/041</td>
-          <td class="td-name">Ilorin East Primary School II</td>
-          <td class="td-state">Kwara</td>
-          <td class="td-num">500</td>
-          <td class="td-num">500</td>
-          <td><span class="td-score td-score-watch">35</span></td>
-          <td><span class="tier-badge tier-watch">Watch</span></td>
-          <td><span class="flag-badge flag-badge-hot">1</span></td>
-        </tr>
-        <tr>
-          <td class="td-code">05/03/07/009</td>
-          <td class="td-name">Cross River Comm Health Centre</td>
-          <td class="td-state">Cross River</td>
-          <td class="td-num">389</td>
-          <td class="td-num">389</td>
-          <td><span class="td-score td-score-watch">20</span></td>
-          <td><span class="tier-badge tier-watch">Watch</span></td>
-          <td><span class="flag-badge flag-badge-hot">1</span></td>
-        </tr>
-        <tr>
-          <td class="td-code">17/08/02/007</td>
-          <td class="td-name">Nassarawa Toto Town Hall</td>
-          <td class="td-state">Nasarawa</td>
-          <td class="td-num">301</td>
-          <td class="td-num">301</td>
-          <td><span class="td-score td-score-watch">10</span></td>
-          <td><span class="tier-badge tier-watch">Watch</span></td>
-          <td><span class="flag-badge flag-badge-hot">1</span></td>
-        </tr>
-        <tr>
-          <td class="td-code">08/05/03/011</td>
-          <td class="td-name">St Augustine Primary School</td>
-          <td class="td-state">Anambra</td>
-          <td class="td-num">678</td>
-          <td class="td-num">678</td>
-          <td><span class="td-score td-score-clean">0</span></td>
-          <td><span class="tier-badge tier-clean">Clean</span></td>
-          <td><span class="flag-badge flag-badge-zero">—</span></td>
-        </tr>
-        <tr>
-          <td class="td-code">36/13/01/001</td>
-          <td class="td-name">Kuje Area Council Primary School I</td>
-          <td class="td-state">FCT Abuja</td>
-          <td class="td-num">410</td>
-          <td class="td-num">410</td>
-          <td><span class="td-score td-score-clean">0</span></td>
-          <td><span class="tier-badge tier-clean">Clean</span></td>
-          <td><span class="flag-badge flag-badge-zero">—</span></td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-</div>
-
-<!-- ── SECTION 4: STATE HEATMAP ── -->
-<div class="section fade-up-4">
-  <div class="section-label">
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
-    State-Level Threat Intelligence
-  </div>
-  <div class="state-grid" id="stateGrid"></div>
-</div>
-
-<!-- ── SECTION 5: COMPOUND FRAUD DEEP DIVE ── -->
-<div class="section">
-  <div class="section-label">
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--crimson)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-    Compound Fraud Deep-Dive — Rivers State
-  </div>
-  <div class="deep-dive">
-    <div class="deep-dive-header">
       <div>
-        <div class="deep-dive-title">Compound Fraud Detected — Rivers State</div>
-        <div class="deep-dive-pu">PU: 22/07/02/055 &nbsp;|&nbsp; Rivers State Govt School C &nbsp;|&nbsp; Port Harcourt / D-Line</div>
+        <div class="brand-name">Vote<span>Guard</span> AI</div>
       </div>
-      <div class="risk-gauge-wrap">
-        <span class="risk-gauge-label">Risk Score</span>
-        <div class="risk-gauge"><div class="risk-gauge-fill" style="width:100%"></div></div>
-        <span class="risk-score-badge">100 / 100</span>
+      <div class="brand-code">VG-OS // S.51 SENTINEL</div>
+    </div>
+
+    <nav class="nav-telemetry">
+      <div class="titanium-pill">
+        <span class="pill-dot-emerald"></span>
+        INEC S.51 MONITOR
+      </div>
+      <div class="titanium-pill">
+        <span class="pill-dot-ice"></span>
+        TRACK 4 CYBERSECURITY
+      </div>
+      <a class="titanium-pill pill-launch-audit" href="audit.html">
+        <svg class="ico" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        FIELD AUDIT TOOL &rarr;
+      </a>
+    </nav>
+  </header>
+
+  <!-- ═══════════════ COCKPIT HERO ═══════════════ -->
+  <section class="cockpit-hero fade-up">
+    <div class="hero-kicker-row">
+      <div class="hero-kicker">
+        <span class="pill-dot-emerald"></span>
+        INEC ELECTORAL RESILIENCE &amp; S.51 ENFORCEMENT ENGINE
+      </div>
+      <div class="telemetry-meta-tag">AUDIT RECONCILIATION PROTOCOL v1.0 &bull; LIVE UTC SYNC</div>
+    </div>
+
+    <h1 class="hero-headline">
+      <span class="hero-headline-titanium">BVAS Screen Integrity</span>
+      <span class="hero-headline-emerald">&amp; Tally Sentinel</span>
+    </h1>
+
+    <p class="hero-sub">
+      Deterministic Computer Vision and Mathematical Reconciliation Engine defending Nigeria's democratic franchise. Directly cross-checks physical BVAS machine screen telemetry against Form EC8A tallies with SHA-256 cryptographic immutability, eliminating manual transcription fraud before paper leaves the polling unit.
+    </p>
+
+    <div class="hero-action-strip">
+      <a class="btn-audit-hero" href="audit.html">
+        <svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        Launch Polling Unit Field Audit
+      </a>
+      <span class="telemetry-meta-tag">Works offline on 2G/3G &bull; Instant SHA-256 Proof Generation &bull; Zero App Store Install Required</span>
+    </div>
+  </section>
+
+  <!-- ═══════════════ 4-METRIC TITANIUM STRIP ═══════════════ -->
+  <section class="cockpit-section fade-up">
+    <div class="section-label-strip">
+      <svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      National Telemetry &amp; Threat Overview
+    </div>
+
+    <div class="cockpit-metrics-grid">
+      <div class="cockpit-metric-card mc-crimson">
+        <div class="metric-card-header">
+          <span class="metric-card-label">Critical Quarantine</span>
+          <div class="metric-icon-wrap">
+            <svg class="ico" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          </div>
+        </div>
+        <div class="metric-card-val">3</div>
+        <div class="metric-card-sub">Immediate tribunal referral required (Overvoting &ge; 100%)</div>
+        <div class="metric-bottom-bar"></div>
+      </div>
+
+      <div class="cockpit-metric-card mc-orange">
+        <div class="metric-card-header">
+          <span class="metric-card-label">Suspect Polling Units</span>
+          <div class="metric-icon-wrap">
+            <svg class="ico" viewBox="0 0 24 24"><polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          </div>
+        </div>
+        <div class="metric-card-val">2</div>
+        <div class="metric-card-sub">Statistical anomalies &amp; in-transit collation divergence</div>
+        <div class="metric-bottom-bar"></div>
+      </div>
+
+      <div class="cockpit-metric-card mc-amber">
+        <div class="metric-card-header">
+          <span class="metric-card-label">Active Watchlist</span>
+          <div class="metric-icon-wrap">
+            <svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
+          </div>
+        </div>
+        <div class="metric-card-val">3</div>
+        <div class="metric-card-sub">Accreditation gaps &amp; round-tally artificial distributions</div>
+        <div class="metric-bottom-bar"></div>
+      </div>
+
+      <div class="cockpit-metric-card mc-emerald">
+        <div class="metric-card-header">
+          <span class="metric-card-label">Clean Verified Units</span>
+          <div class="metric-icon-wrap">
+            <svg class="ico" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          </div>
+        </div>
+        <div class="metric-card-val">2</div>
+        <div class="metric-card-sub">Zero discrepancy: BVAS hardware equals EC8A sheet</div>
+        <div class="metric-bottom-bar"></div>
       </div>
     </div>
-    <div class="deep-dive-body">
-      <div>
-        <table class="flags-table">
-          <thead><tr><th>Flag</th><th>Severity</th><th>Detail</th></tr></thead>
+  </section>
+
+  <!-- ═══════════════ SIGNAL MATRIX & STAT STACK ═══════════════ -->
+  <section class="cockpit-section fade-up">
+    <div class="section-label-strip">
+      <svg class="ico" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      Electoral Fraud Signal Matrix // S.51 Automated Detectors
+    </div>
+
+    <div class="signal-cockpit-grid">
+      <div class="sculpted-panel">
+        <div class="panel-header-row">
+          <div class="panel-heading">
+            <svg class="ico" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/></svg>
+            Active Forensic Detectors
+          </div>
+          <div class="telemetry-dots">
+            <span class="tdot r"></span>
+            <span class="tdot y"></span>
+            <span class="tdot g"></span>
+          </div>
+        </div>
+
+        <div class="signal-item-row sig-crimson">
+          <div class="signal-meta-line">
+            <span class="signal-title-text">OVERVOTING // S.51 STATUTORY BREACH</span>
+            <span class="signal-count-badge">3 UNITS</span>
+          </div>
+          <div class="signal-track-chassis"><div class="signal-fill-bar" style="width:100%"></div></div>
+        </div>
+
+        <div class="signal-item-row sig-crimson">
+          <div class="signal-meta-line">
+            <span class="signal-title-text">RESULT_REVERSAL // IN-TRANSIT DIVERGENCE</span>
+            <span class="signal-count-badge">2 UNITS</span>
+          </div>
+          <div class="signal-track-chassis"><div class="signal-fill-bar" style="width:67%"></div></div>
+        </div>
+
+        <div class="signal-item-row sig-crimson">
+          <div class="signal-meta-line">
+            <span class="signal-title-text">IMPOSSIBLE_TURNOUT // PHYSICAL POPULATION BOUND</span>
+            <span class="signal-count-badge">2 UNITS</span>
+          </div>
+          <div class="signal-track-chassis"><div class="signal-fill-bar" style="width:67%"></div></div>
+        </div>
+
+        <div class="signal-item-row sig-orange">
+          <div class="signal-meta-line">
+            <span class="signal-title-text">MISSING_IREV_UPLOAD // DIGITAL BLACKOUT</span>
+            <span class="signal-count-badge">3 UNITS</span>
+          </div>
+          <div class="signal-track-chassis"><div class="signal-fill-bar" style="width:100%"></div></div>
+        </div>
+
+        <div class="signal-item-row sig-orange">
+          <div class="signal-meta-line">
+            <span class="signal-title-text">SINGLE_PARTY_SWEEP // MONOPOLISTIC INFLATION</span>
+            <span class="signal-count-badge">2 UNITS</span>
+          </div>
+          <div class="signal-track-chassis"><div class="signal-fill-bar" style="width:67%"></div></div>
+        </div>
+
+        <div class="signal-item-row sig-amber">
+          <div class="signal-meta-line">
+            <span class="signal-title-text">ACCREDITATION_GAP // DISCONNECT PRE-COLLATION</span>
+            <span class="signal-count-badge">2 UNITS</span>
+          </div>
+          <div class="signal-track-chassis"><div class="signal-fill-bar" style="width:67%"></div></div>
+        </div>
+
+        <div class="signal-item-row sig-amber">
+          <div class="signal-meta-line">
+            <span class="signal-title-text">SUSPICIOUS_ROUND // STATISTICAL ANOMALY</span>
+            <span class="signal-count-badge">1 UNIT</span>
+          </div>
+          <div class="signal-track-chassis"><div class="signal-fill-bar" style="width:33%"></div></div>
+        </div>
+      </div>
+
+      <div class="stat-stack-col">
+        <div class="sculpted-stat-box">
+          <div class="stat-box-title">Total Flags Raised</div>
+          <div class="stat-box-number" style="color:var(--crimson)">15</div>
+          <div class="stat-box-note">Across 10 national sample units</div>
+        </div>
+
+        <div class="sculpted-stat-box">
+          <div class="stat-box-title">National Discrepancy Rate</div>
+          <div class="stat-box-number" style="color:var(--orange)">80.0%</div>
+          <div class="stat-box-note">8 of 10 monitored units exhibit manipulation</div>
+        </div>
+
+        <div class="sculpted-stat-box">
+          <div class="stat-box-title">Electoral Act S.51 Nullifications</div>
+          <div class="stat-box-number" style="color:var(--amber)">3 PU</div>
+          <div class="stat-box-note">Mandatory statutory cancellation under law</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ RISK INTELLIGENCE TABLE ═══════════════ -->
+  <section class="cockpit-section fade-up">
+    <div class="section-label-strip">
+      <svg class="ico" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      Polling Unit Forensic Intelligence Table
+    </div>
+
+    <div class="table-titanium-wrap">
+      <div class="table-scroll">
+        <table class="table-titanium">
+          <thead>
+            <tr>
+              <th>PU Code</th>
+              <th>Polling Unit Name</th>
+              <th>State</th>
+              <th>BVAS Accredited</th>
+              <th>Votes Cast</th>
+              <th>Risk Score</th>
+              <th>Forensic Tier</th>
+              <th>Active Flags</th>
+            </tr>
+          </thead>
           <tbody>
             <tr>
-              <td><span class="flag-code sev-critical">OVERVOTING</span></td>
-              <td><span class="tier-badge tier-critical">Critical</span></td>
-              <td class="flag-detail">905 votes cast vs 600 BVAS-accredited voters. Excess: +305 votes. Direct violation of Electoral Act 2022 S.51.</td>
+              <td><span class="pu-tag">22/07/02/055</span></td>
+              <td><div class="pu-unit-name">Rivers State Govt School C</div></td>
+              <td><span class="pu-state-pill">Rivers</span></td>
+              <td><span class="val-mono">600</span></td>
+              <td><span class="val-mono-alert">905</span></td>
+              <td><span class="risk-score-pill score-critical">100</span></td>
+              <td><span class="tier-chip tier-critical">Critical</span></td>
+              <td><span class="flags-circle flags-hot">6</span></td>
             </tr>
             <tr>
-              <td><span class="flag-code sev-critical">IMPOSSIBLE_TURNOUT</span></td>
-              <td><span class="tier-badge tier-critical">Critical</span></td>
-              <td class="flag-detail">905 votes exceed 1,000 registered voters. Physically impossible turnout of 90.5%.</td>
+              <td><span class="pu-tag">31/11/06/004</span></td>
+              <td><div class="pu-unit-name">Oduduwa Community School</div></td>
+              <td><span class="pu-state-pill">Osun</span></td>
+              <td><span class="val-mono">850</span></td>
+              <td><span class="val-mono-alert">920</span></td>
+              <td><span class="risk-score-pill score-critical">95</span></td>
+              <td><span class="tier-chip tier-critical">Critical</span></td>
+              <td><span class="flags-circle flags-hot">3</span></td>
             </tr>
             <tr>
-              <td><span class="flag-code sev-critical">RESULT_REVERSAL</span></td>
-              <td><span class="tier-badge tier-critical">Critical</span></td>
-              <td class="flag-detail">PU declared 905 votes but LGA collation record shows 950. Delta: +45. Result was altered in transit to collation centre.</td>
+              <td><span class="pu-tag">25/04/09/022</span></td>
+              <td><div class="pu-unit-name">Garki Model Primary School</div></td>
+              <td><span class="pu-state-pill">FCT Abuja</span></td>
+              <td><span class="val-mono">520</span></td>
+              <td><span class="val-mono-alert">760</span></td>
+              <td><span class="risk-score-pill score-critical">75</span></td>
+              <td><span class="tier-chip tier-critical">Critical</span></td>
+              <td><span class="flags-circle flags-hot">1</span></td>
             </tr>
             <tr>
-              <td><span class="flag-code sev-high">MISSING_IREV_UPLOAD</span></td>
-              <td><span class="tier-badge tier-suspect">High</span></td>
-              <td class="flag-detail">No Form EC8A image uploaded to IReV portal. Transparency requirement under INEC guidelines violated.</td>
+              <td><span class="pu-tag">07/06/04/018</span></td>
+              <td><div class="pu-unit-name">Delta State Univ Clinic PU</div></td>
+              <td><span class="pu-state-pill">Delta</span></td>
+              <td><span class="val-mono">612</span></td>
+              <td><span class="val-mono">612</span></td>
+              <td><span class="risk-score-pill score-suspect">45</span></td>
+              <td><span class="tier-chip tier-suspect">Suspect</span></td>
+              <td><span class="flags-circle flags-hot">1</span></td>
             </tr>
             <tr>
-              <td><span class="flag-code sev-high">SINGLE_PARTY_SWEEP</span></td>
-              <td><span class="tier-badge tier-suspect">High</span></td>
-              <td class="flag-detail">PDP received 99.4% of all votes (900 / 905). Statistically anomalous in a multi-party contest.</td>
+              <td><span class="pu-tag">12/02/01/033</span></td>
+              <td><div class="pu-unit-name">Fagge Ward C Community Centre</div></td>
+              <td><span class="pu-state-pill">Kano</span></td>
+              <td><span class="val-mono">1,800</span></td>
+              <td><span class="val-mono">1,800</span></td>
+              <td><span class="risk-score-pill score-suspect">40</span></td>
+              <td><span class="tier-chip tier-suspect">Suspect</span></td>
+              <td><span class="flags-circle flags-hot">1</span></td>
             </tr>
             <tr>
-              <td><span class="flag-code sev-high">ACCREDITATION_GAP</span></td>
-              <td><span class="tier-badge tier-suspect">High</span></td>
-              <td class="flag-detail">BVAS logged 600 accreditations but EC8A declares 720. Gap: +120 voters (+20% inflation). Data was altered post-accreditation.</td>
+              <td><span class="pu-tag">20/09/03/041</span></td>
+              <td><div class="pu-unit-name">Ilorin East Primary School II</div></td>
+              <td><span class="pu-state-pill">Kwara</span></td>
+              <td><span class="val-mono">500</span></td>
+              <td><span class="val-mono">500</span></td>
+              <td><span class="risk-score-pill score-watch">35</span></td>
+              <td><span class="tier-chip tier-watch">Watch</span></td>
+              <td><span class="flags-circle flags-hot">1</span></td>
+            </tr>
+            <tr>
+              <td><span class="pu-tag">05/03/07/009</span></td>
+              <td><div class="pu-unit-name">Cross River Comm Health Centre</div></td>
+              <td><span class="pu-state-pill">Cross River</span></td>
+              <td><span class="val-mono">389</span></td>
+              <td><span class="val-mono">389</span></td>
+              <td><span class="risk-score-pill score-watch">20</span></td>
+              <td><span class="tier-chip tier-watch">Watch</span></td>
+              <td><span class="flags-circle flags-hot">1</span></td>
+            </tr>
+            <tr>
+              <td><span class="pu-tag">17/08/02/007</span></td>
+              <td><div class="pu-unit-name">Nassarawa Toto Town Hall</div></td>
+              <td><span class="pu-state-pill">Nasarawa</span></td>
+              <td><span class="val-mono">301</span></td>
+              <td><span class="val-mono">301</span></td>
+              <td><span class="risk-score-pill score-watch">10</span></td>
+              <td><span class="tier-chip tier-watch">Watch</span></td>
+              <td><span class="flags-circle flags-hot">1</span></td>
+            </tr>
+            <tr>
+              <td><span class="pu-tag">08/05/03/011</span></td>
+              <td><div class="pu-unit-name">St Augustine Primary School</div></td>
+              <td><span class="pu-state-pill">Anambra</span></td>
+              <td><span class="val-mono">678</span></td>
+              <td><span class="val-mono">678</span></td>
+              <td><span class="risk-score-pill score-clean">0</span></td>
+              <td><span class="tier-chip tier-clean">Verified</span></td>
+              <td><span class="flags-circle flags-zero">&mdash;</span></td>
+            </tr>
+            <tr>
+              <td><span class="pu-tag">36/13/01/001</span></td>
+              <td><div class="pu-unit-name">Kuje Area Council School I</div></td>
+              <td><span class="pu-state-pill">FCT Abuja</span></td>
+              <td><span class="val-mono">410</span></td>
+              <td><span class="val-mono">410</span></td>
+              <td><span class="risk-score-pill score-clean">0</span></td>
+              <td><span class="tier-chip tier-clean">Verified</span></td>
+              <td><span class="flags-circle flags-zero">&mdash;</span></td>
             </tr>
           </tbody>
         </table>
-        <div class="verdict-tribunal">
-          Refer to Electoral Tribunal — Electoral Act 2022 S.51 violated &nbsp;|&nbsp; All 6 compound signals confirmed &nbsp;|&nbsp; Probability of legitimate result: &lt; 0.001%
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ STATE HEATMAP ═══════════════ -->
+  <section class="cockpit-section fade-up">
+    <div class="section-label-strip">
+      <svg class="ico" viewBox="0 0 24 24"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+      Geopolitical Threat Intelligence // State Level
+    </div>
+    <div class="state-intelligence-grid" id="stateGrid"></div>
+  </section>
+
+  <!-- ═══════════════ COMPOUND FRAUD DEEP DIVE ═══════════════ -->
+  <section class="cockpit-section fade-up">
+    <div class="section-label-strip">
+      <svg class="ico" style="color:var(--crimson)" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      Compound Forensic Deep-Dive // Case 22/07/02/055
+    </div>
+
+    <div class="deepdive-titanium-deck">
+      <div class="deepdive-header-bar">
+        <div class="deepdive-title-wrap">
+          <h3>
+            <svg class="ico" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            Compound Fraud Pattern Confirmed // Rivers State
+          </h3>
+          <div class="deepdive-pu-sub">PU: 22/07/02/055 &bull; Rivers State Govt School C &bull; Port Harcourt Ward 2</div>
+        </div>
+
+        <div class="deepdive-gauge-wrap">
+          <span class="gauge-label-text">Threat Severity</span>
+          <div class="gauge-track-chassis">
+            <div class="gauge-fill-glow" style="width:100%"></div>
+          </div>
+          <span class="gauge-score-digits">100 / 100</span>
         </div>
       </div>
-      <div>
-        <table class="summary-table">
-          <tr><td class="summary-key">Registered Voters</td><td class="summary-val">1,000</td></tr>
-          <tr><td class="summary-key">BVAS Accredited</td><td class="summary-val summary-val-alert">600</td></tr>
-          <tr><td class="summary-key">EC8A Declared</td><td class="summary-val summary-val-alert">720 ↑+120</td></tr>
-          <tr><td class="summary-key">Total Votes Cast</td><td class="summary-val summary-val-alert">905 ↑+305</td></tr>
-          <tr><td class="summary-key">LGA Collation Total</td><td class="summary-val summary-val-alert">950 ↑+45</td></tr>
-          <tr><td class="summary-key">IReV Upload</td><td class="summary-val summary-val-alert">MISSING</td></tr>
-          <tr><td class="summary-key">Top Party Share</td><td class="summary-val summary-val-alert">99.4% (PDP)</td></tr>
-          <tr><td class="summary-key">S.51 Violation</td><td class="summary-val summary-val-alert">CONFIRMED</td></tr>
-        </table>
+
+      <div class="deepdive-content-grid">
+        <div>
+          <table class="flags-titanium-table">
+            <thead>
+              <tr>
+                <th>Forensic Flag</th>
+                <th>Severity</th>
+                <th>Factual Violation</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="flag-code-badge" style="color:var(--crimson)">OVERVOTING</span></td>
+                <td><span class="tier-chip tier-critical">Critical</span></td>
+                <td style="color:var(--text-slate)">905 votes cast vs 600 BVAS-accredited voters (+305 excess votes). Direct violation of Electoral Act 2022 Section 51.</td>
+              </tr>
+              <tr>
+                <td><span class="flag-code-badge" style="color:var(--crimson)">IMPOSSIBLE_TURNOUT</span></td>
+                <td><span class="tier-chip tier-critical">Critical</span></td>
+                <td style="color:var(--text-slate)">905 votes exceed 1,000 registered voters (90.5% turnout vs state historical baseline of 24.1%).</td>
+              </tr>
+              <tr>
+                <td><span class="flag-code-badge" style="color:var(--crimson)">RESULT_REVERSAL</span></td>
+                <td><span class="tier-chip tier-critical">Critical</span></td>
+                <td style="color:var(--text-slate)">Polling Unit declared 905 votes but LGA collation record indicates 950 (+45 inflation during transit to collation centre).</td>
+              </tr>
+              <tr>
+                <td><span class="flag-code-badge" style="color:var(--orange)">MISSING_IREV_UPLOAD</span></td>
+                <td><span class="tier-chip tier-suspect">High</span></td>
+                <td style="color:var(--text-slate)">Zero Form EC8A cryptographic image published to IReV portal, concealing physical paper provenance.</td>
+              </tr>
+              <tr>
+                <td><span class="flag-code-badge" style="color:var(--orange)">SINGLE_PARTY_SWEEP</span></td>
+                <td><span class="tier-chip tier-suspect">High</span></td>
+                <td style="color:var(--text-slate)">PDP allocated 99.4% (900 of 905 votes), exceeding 4-sigma multi-party statistical threshold.</td>
+              </tr>
+              <tr>
+                <td><span class="flag-code-badge" style="color:var(--amber)">ACCREDITATION_GAP</span></td>
+                <td><span class="tier-chip tier-watch">Elevated</span></td>
+                <td style="color:var(--text-slate)">BVAS logged 600 verified accreditations, but EC8A paper falsely claimed 720 (+120 voter inflation).</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="legal-alert-box">
+            MANDATORY STATUTORY REMEDY &mdash; ELECTORAL ACT 2022 SECTION 51:<br>
+            &ldquo;Where the number of votes cast at an election in any polling unit exceeds the number of accredited voters in that polling unit, the Returning Officer shall cancel the result of the election in that polling unit.&rdquo; All 6 compound criteria satisfied. Legitimate result probability &lt; 0.0001%.
+          </div>
+        </div>
+
+        <div>
+          <table class="summary-spec-table">
+            <tr><td class="spec-key">Registered Voters</td><td class="spec-val">1,000</td></tr>
+            <tr><td class="spec-key">BVAS Screen Accredited</td><td class="spec-val spec-val-alert">600</td></tr>
+            <tr><td class="spec-key">EC8A Paper Accredited</td><td class="spec-val spec-val-alert">720 (+120)</td></tr>
+            <tr><td class="spec-key">Total Votes Cast</td><td class="spec-val spec-val-alert">905 (+305)</td></tr>
+            <tr><td class="spec-key">LGA Collation Ledger</td><td class="spec-val spec-val-alert">950 (+45)</td></tr>
+            <tr><td class="spec-key">IReV Digital Telemetry</td><td class="spec-val spec-val-alert">ZERO UPLOAD</td></tr>
+            <tr><td class="spec-key">Dominant Party Share</td><td class="spec-val spec-val-alert">99.4%</td></tr>
+            <tr><td class="spec-key">S.51 Nullification Order</td><td class="spec-val spec-val-alert">CONFIRMED</td></tr>
+          </table>
+        </div>
       </div>
     </div>
-  </div>
-</div>
+  </section>
 
-<!-- ── SECTION 6: THE MOAT ── -->
-<div class="section">
-  <div class="section-label">
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-    Why VoteGuard AI Is Undeniable
-  </div>
-  <div class="moat-grid">
-    <div class="moat-card mc-ice">
-      <div class="moat-num">01</div>
-      <div class="moat-title">Statistical Engine</div>
-      <div class="moat-desc">8 deterministic fraud detectors grounded in Electoral Act 2022 S.51. No AI hallucinations — pure mathematics. 24 automated tests, all passing.</div>
+  <!-- ═══════════════ MOAT SECTION ═══════════════ -->
+  <section class="cockpit-section fade-up">
+    <div class="section-label-strip">
+      <svg class="ico" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      The VoteGuard Moat // Why This Architecture Is Undeniable
     </div>
-    <div class="moat-card mc-em">
-      <div class="moat-num">02</div>
-      <div class="moat-title">Vision Pipeline</div>
-      <div class="moat-desc">Computer vision reads the BVAS machine screen directly from a photo. The hardware display is the unforgeable ground truth — we bypass manual transcription entirely.</div>
-    </div>
-    <div class="moat-card mc-am">
-      <div class="moat-num">03</div>
-      <div class="moat-title">Cryptographic Proof</div>
-      <div class="moat-desc">SHA-256 timestamped proof generated at the point of audit. Court-admissible. Cannot be forged or backdated. Works offline on 2G — queues and syncs automatically.</div>
-    </div>
-  </div>
-</div>
 
-<!-- ── FOOTER ── -->
-<div class="footer">
-  <div class="footer-left">
-    VoteGuard AI v1.0 &nbsp;|&nbsp; BVAS Tally Reconciliation Engine<br>
-    Electoral Act 2022 S.51 Enforcement at Point of Origin
-  </div>
-  <div class="footer-right">
-    Usman Bamidele<br>
-    github.com/amazing200guy1-a11y/voteguard-ai
-  </div>
-  <div class="footer-center">
-    <div class="partner-chips">
-      <span class="partner-chip">INEC</span>
-      <span class="partner-chip">Rise Networks</span>
-      <span class="partner-chip">Meta</span>
-      <span class="partner-chip">Google</span>
-      <span class="partner-chip">Microsoft</span>
-      <span class="partner-chip">MacArthur Foundation</span>
-    </div>
-    <div style="margin-top:0.75rem;">
-      <span class="live-dot" id="clock">AUDIT SESSION ACTIVE</span>
-    </div>
-  </div>
-</div>
+    <div class="moat-cards-deck">
+      <div class="moat-chassis-card mc-neon-ice">
+        <div class="moat-card-num">01</div>
+        <div class="moat-card-title">Deterministic Math Engine</div>
+        <div class="moat-card-desc">
+          8 rigorous forensic detectors anchored in Nigerian statutory law (Electoral Act 2022 Section 51). Zero probabilistic LLM hallucinations &mdash; verifiable pure arithmetic audited across 24 automated unit tests.
+        </div>
+      </div>
 
-</div><!-- /wrap -->
+      <div class="moat-chassis-card mc-neon-em">
+        <div class="moat-card-num">02</div>
+        <div class="moat-card-title">Hardware Screen Optical Audit</div>
+        <div class="moat-card-desc">
+          Bypasses the human transcription vulnerability. Computer vision extracts numbers directly from the physical BVAS hardware screen, treating the LCD display as the single tamper-evident source of ground truth.
+        </div>
+      </div>
+
+      <div class="moat-chassis-card mc-neon-amber">
+        <div class="moat-card-num">03</div>
+        <div class="moat-card-title">Cryptographic Proof &amp; 2G Cache</div>
+        <div class="moat-card-desc">
+          Produces SHA-256 tribunal-admissible evidence certificates at point of origin. Designed for low-bandwidth rural environments &mdash; queues audits locally in browser storage and syncs automatically when 2G/3G connects.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ INSTITUTIONAL FOOTER ═══════════════ -->
+  <footer class="institutional-footer">
+    <div class="footer-top-strip">
+      <div class="footer-meta-block">
+        <strong>VoteGuard AI v1.0 &bull; BVAS Optical Integrity &amp; Electoral Resilience Sentinel</strong><br>
+        Enforcing Electoral Act 2022 Section 51 &bull; Track 4 Electoral Cybersecurity &bull; #AI4Elections Nigeria 2026
+      </div>
+      <div class="footer-author-block">
+        <strong>Usman Bamidele</strong> &bull; AI Developer &amp; Civic Technology Builder<br>
+        <a href="https://github.com/amazing200guy1-a11y/voteguard-ai" target="_blank" rel="noopener">github.com/amazing200guy1-a11y/voteguard-ai</a>
+      </div>
+    </div>
+
+    <div class="partner-chips-deck">
+      <span class="partner-chip-pill">INEC</span>
+      <span class="partner-chip-pill">Rise Networks</span>
+      <span class="partner-chip-pill">Meta</span>
+      <span class="partner-chip-pill">Google</span>
+      <span class="partner-chip-pill">Microsoft</span>
+      <span class="partner-chip-pill">MacArthur Foundation</span>
+      <span class="partner-chip-pill">Centre for Information Technology and Development (CITAD)</span>
+    </div>
+
+    <div class="live-sentinel-indicator">
+      <span class="pill-dot-emerald"></span>
+      <span id="liveClock">AUDIT SESSION ACTIVE &bull; UTC CLOCK INITIALIZING</span>
+    </div>
+  </footer>
+
+</div><!-- /container -->
 
 <script>
-// State heatmap data
+// State Heatmap Data
 const STATES = [
   {name:'Rivers',     units:1, flagged:1, avg:100},
   {name:'Osun',       units:1, flagged:1, avg:95},
@@ -792,34 +1638,39 @@ const STATES = [
   {name:'Nasarawa',   units:1, flagged:1, avg:10},
   {name:'Anambra',    units:1, flagged:0, avg:0},
 ];
-function tierColor(avg){
-  if(avg>=70) return {border:'var(--crimson)',fill:'var(--crimson)',text:'var(--crimson)'};
-  if(avg>=46) return {border:'var(--orange)', fill:'var(--orange)', text:'var(--orange)'};
-  if(avg>=21) return {border:'var(--amber)',  fill:'var(--amber)',  text:'var(--amber)'};
-  return            {border:'var(--emerald)',fill:'var(--emerald)',text:'var(--emerald)'};
+
+function getTierStyle(avg){
+  if(avg >= 70) return {border:'var(--crimson)', fill:'var(--crimson)', text:'var(--crimson)'};
+  if(avg >= 45) return {border:'var(--orange)', fill:'var(--orange)', text:'var(--orange)'};
+  if(avg >= 20) return {border:'var(--amber)', fill:'var(--amber)', text:'var(--amber)'};
+  return {border:'var(--emerald)', fill:'var(--emerald)', text:'var(--emerald)'};
 }
+
 const grid = document.getElementById('stateGrid');
-STATES.forEach(s=>{
-  const c = tierColor(s.avg);
+STATES.forEach(s => {
+  const c = getTierStyle(s.avg);
   const el = document.createElement('div');
-  el.className = 'state-card';
+  el.className = 'state-card-chassis';
   el.style.borderLeftColor = c.border;
   el.innerHTML = `
-    <div class="state-name">${s.name}</div>
-    <div class="state-row"><span>Units Audited</span><span>${s.units}</span></div>
-    <div class="state-row"><span>Units Flagged</span><span style="color:${c.text}">${s.flagged}</span></div>
-    <div class="state-row"><span>Avg Risk Score</span><span style="color:${c.text};font-family:var(--font-mono)">${s.avg}</span></div>
-    <div class="state-risk-bar"><div class="state-risk-fill" style="width:${s.avg}%;background:${c.fill}"></div></div>`;
+    <div class="state-card-header">${s.name}</div>
+    <div class="state-data-line"><span>Units Audited</span><span>${s.units}</span></div>
+    <div class="state-data-line"><span>Units Flagged</span><span style="color:${c.text}">${s.flagged}</span></div>
+    <div class="state-data-line"><span>Avg Risk Score</span><span style="color:${c.text};font-family:var(--font-mono)">${s.avg}</span></div>
+    <div class="state-micro-bar-wrap">
+      <div class="state-micro-bar-fill" style="width:${s.avg}%;background:${c.fill}"></div>
+    </div>`;
   grid.appendChild(el);
 });
 
-// Live clock
-function tick(){
+// Live UTC Clock
+function updateClock(){
   const now = new Date();
-  const t = now.toUTCString().replace('GMT','UTC');
-  document.getElementById('clock').textContent = 'AUDIT SESSION ACTIVE — ' + t;
+  const utcString = now.toUTCString().replace('GMT', 'UTC');
+  document.getElementById('liveClock').textContent = 'AUDIT SENTINEL ACTIVE • ' + utcString;
 }
-tick(); setInterval(tick, 1000);
+updateClock();
+setInterval(updateClock, 1000);
 </script>
 </body>
 </html>

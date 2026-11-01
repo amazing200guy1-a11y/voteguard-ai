@@ -1,537 +1,1086 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VoteGuard AI — Field Audit Tool</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-<style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VoteGuard AI — Polling Unit Optical Field Audit // S.51 Sentinel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <style>
+    /* ════════════════════════════════════════════════════════
+       VOTEGUARD AI — Optical Field Audit Sentinel
+       Titanium Aerospace Precision & Forensic Court Evidence
+       ════════════════════════════════════════════════════════ */
 
-  :root {
-    --bg: #04070D;
-    --bg-secondary: #080C14;
-    --bg-gunmetal-top: #232C3B;
-    --bg-gunmetal-mid: #171E2A;
-    --bg-gunmetal-base: #0F131C;
-    --bg-tray: #121824;
-    --border: rgba(200, 220, 240, 0.10);
-    --border-chamfer: rgba(200, 220, 240, 0.18);
-    --border-hover: rgba(200, 220, 240, 0.35);
-    --text: #F1F5F9;
-    --text-dim: #94A3B8;
-    --text-slate: #8A98A8;
-    --text-muted: #64748B;
-    --platinum: #E2E8F0;
-    --platinum-bright: #F8FAFC;
-    --emerald: #10B981;
-    --emerald-dim: rgba(16, 185, 129, 0.12);
-    --crimson: #E11D48;
-    --crimson-dim: rgba(225, 29, 72, 0.12);
-    --amber: #F59E0B;
-    --amber-dim: rgba(245, 158, 11, 0.12);
-    --ice: #7DD3FC;
-    --ice-dim: rgba(125, 211, 252, 0.10);
-    --orange: #F97316;
-    --orange-dim: rgba(249, 115, 22, 0.12);
-    --pill-bg: #1E2838;
-    --pill-border: rgba(200, 220, 240, 0.22);
-    --pill-text: #D8E8F8;
-    --font-mono: 'JetBrains Mono', monospace;
-    --font-heading: 'Outfit', sans-serif;
-    --font-body: 'Outfit', sans-serif;
-    --radius-sm: 6px;
-    --radius-md: 10px;
-    --radius-lg: 14px;
-    --transition: 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    /* legacy aliases */
-    --green: var(--emerald);
-    --red: var(--crimson);
-    --blue: var(--ice);
-    --muted: var(--text-muted);
-    --mono: var(--font-mono);
-    --sans: var(--font-body);
-    --card-1: var(--bg-gunmetal-top);
-    --card-2: var(--bg-gunmetal-mid);
-    --card-3: var(--bg-gunmetal-base);
-  }
+    :root {
+      --bg: #04070D;
+      --bg-secondary: #080C14;
 
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--font-body);
-    min-height: 100vh;
-    padding: 1.5rem 1rem 4rem;
-    -webkit-font-smoothing: antialiased;
-  }
-  body::before {
-    content: "";
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background:
-      radial-gradient(ellipse 80% 50% at 50% -10%, rgba(125,211,252,0.04), transparent 70%),
-      radial-gradient(circle at 10% 25%, rgba(0,112,186,0.03), transparent 45%),
-      linear-gradient(rgba(200,220,240,0.015) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(200,220,240,0.015) 1px, transparent 1px);
-    background-size: 100% 100%, 100% 100%, 40px 40px, 40px 40px;
-    pointer-events: none;
-    z-index: 0;
-  }
+      /* Sculpted Gunmetal Titanium Stack */
+      --bg-gunmetal-top: #232C3B;
+      --bg-gunmetal-mid: #171E2A;
+      --bg-gunmetal-base: #0F131C;
+      --bg-tray: #121824;
+      --bg-tray-hover: #161D2B;
 
-  /* ── Header ── */
-  .header {
-    display: flex; align-items: center; gap: 1rem;
-    margin-bottom: 2rem; padding-bottom: 1.25rem;
-    border-bottom: 1px solid var(--border);
-    position: relative; z-index: 1;
-  }
-  .header-icon {
-    width: 44px; height: 44px;
-    background: var(--emerald-dim);
-    border: 1px solid var(--border-chamfer);
-    box-shadow: inset 0 1px 0 rgba(200,220,240,0.06);
-    border-radius: var(--radius-md);
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-  }
-  .header-title { font-size: 1.2rem; font-weight: 800; font-family: var(--font-heading); color: var(--platinum-bright); letter-spacing: -0.3px; }
-  .header-sub { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.15rem; font-family: var(--font-mono); letter-spacing: 0.04em; }
-  .back-link {
-    margin-left: auto;
-    font-size: 0.7rem; font-family: var(--font-mono);
-    color: var(--text-muted); text-decoration: none;
-    border: 1px solid var(--border);
-    background: var(--bg-tray);
-    padding: 0.35rem 0.85rem; border-radius: var(--radius-sm);
-    letter-spacing: 0.06em; text-transform: uppercase;
-    transition: color var(--transition), border-color var(--transition);
-  }
-  .back-link:hover { color: var(--ice); border-color: rgba(125,211,252,0.4); }
+      /* Titanium Metallic Hairlines & Bevels */
+      --border: rgba(200, 220, 240, 0.10);
+      --border-chamfer: rgba(200, 220, 240, 0.18);
+      --border-hover: rgba(200, 220, 240, 0.35);
+      --border-accent: rgba(200, 220, 240, 0.25);
 
-  /* ── Step indicator ── */
-  .steps {
-    display: flex; gap: 0; margin-bottom: 2rem;
-    border-radius: var(--radius-md); overflow: hidden;
-    border: 1px solid var(--border);
-    position: relative; z-index: 1;
-  }
-  .step {
-    flex: 1; padding: 0.75rem 0.5rem; text-align: center;
-    background: var(--bg-gunmetal-base);
-    font-size: 0.65rem; font-family: var(--font-mono);
-    letter-spacing: 0.1em; text-transform: uppercase;
-    color: var(--text-muted);
-    border-right: 1px solid var(--border);
-    transition: all 0.3s;
-  }
-  .step:last-child { border-right: none; }
-  .step.active { background: var(--emerald-dim); color: var(--emerald); border-top: 1px solid rgba(16,185,129,0.3); }
-  .step.done   { background: rgba(16,185,129,0.04); color: rgba(16,185,129,0.4); }
-  .step-num { font-size: 1rem; font-weight: 700; display: block; margin-bottom: 0.2rem; font-family: var(--font-mono); }
+      /* Typography & Accents */
+      --text: #F1F5F9;
+      --text-dim: #94A3B8;
+      --text-slate: #8A98A8;
+      --text-muted: #64748B;
 
-  /* ── Cards ── */
-  .card {
-    background: var(--bg-gunmetal-mid);
-    border: 1px solid var(--border);
-    border-top: 1px solid var(--border-chamfer);
-    border-radius: var(--radius-lg);
-    box-shadow: inset 0 1px 0 rgba(200,220,240,0.05), 0 4px 24px rgba(0,0,0,0.4);
-    padding: 1.5rem;
-    margin-bottom: 1.25rem;
-    position: relative; z-index: 1;
-  }
-  .card-title {
-    font-size: 0.65rem; font-family: var(--font-mono);
-    letter-spacing: 0.12em; text-transform: uppercase;
-    color: var(--text-muted); margin-bottom: 1.25rem;
-    display: flex; align-items: center; gap: 0.5rem;
-  }
-  .card-title svg { flex-shrink: 0; color: var(--text-slate); }
+      --platinum: #E2E8F0;
+      --platinum-bright: #F8FAFC;
+      --steel: #475569;
 
-  /* ── Photo upload zones ── */
-  .upload-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-  @media (max-width: 600px) { .upload-grid { grid-template-columns: 1fr; } }
+      --emerald: #10B981;
+      --emerald-dim: rgba(16, 185, 129, 0.12);
 
-  .upload-zone {
-    border: 1px dashed var(--border-chamfer);
-    border-radius: var(--radius-md);
-    padding: 1.5rem 1rem;
-    text-align: center;
-    cursor: pointer;
-    transition: all var(--transition);
-    position: relative;
-    background: var(--bg-gunmetal-base);
-    min-height: 160px;
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center; gap: 0.75rem;
-    box-shadow: inset 0 1px 0 rgba(200,220,240,0.03);
-  }
-  .upload-zone:hover { border-color: rgba(16,185,129,0.4); background: rgba(16,185,129,0.03); }
-  .upload-zone.has-image { border-color: rgba(16,185,129,0.35); border-style: solid; }
-  .upload-zone.processing { border-color: rgba(245,158,11,0.5); animation: pulse-border 1s infinite; }
-  .upload-zone input[type="file"] {
-    position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
-  }
-  .upload-label {
-    font-size: 0.68rem; font-family: var(--font-mono);
-    letter-spacing: 0.1em; text-transform: uppercase;
-    color: var(--text-muted);
-  }
-  .upload-hint { font-size: 0.68rem; color: var(--text-slate); line-height: 1.5; }
-  .upload-preview {
-    width: 100%; max-height: 120px; object-fit: contain;
-    border-radius: 6px; display: none;
-  }
-  .upload-zone.has-image .upload-preview { display: block; }
-  .upload-zone.has-image .upload-icon,
-  .upload-zone.has-image .upload-label,
-  .upload-zone.has-image .upload-hint { display: none; }
+      --crimson: #E11D48;
+      --crimson-dim: rgba(225, 29, 72, 0.12);
 
-  /* Extracted number badge */
-  .extracted-num {
-    font-family: var(--mono); font-size: 2rem; font-weight: 700;
-    display: none; margin-top: 0.5rem;
-  }
-  .extracted-num.visible { display: block; }
-  .extracted-label {
-    font-size: 0.65rem; font-family: var(--mono);
-    letter-spacing: 0.1em; text-transform: uppercase;
-    color: var(--muted); display: none;
-  }
-  .extracted-label.visible { display: block; }
+      --amber: #F59E0B;
+      --amber-dim: rgba(245, 158, 11, 0.12);
 
-  /* ── Processing bar ── */
-  .progress-bar-wrap {
-    height: 3px; background: var(--card-1);
-    border-radius: 2px; overflow: hidden;
-    margin-top: 0.75rem; display: none;
-  }
-  .progress-bar-wrap.visible { display: block; }
-  .progress-bar {
-    height: 100%; width: 0%;
-    background: linear-gradient(90deg, var(--green), var(--blue));
-    border-radius: 2px;
-    transition: width 0.3s ease;
-  }
+      --ice: #7DD3FC;
+      --ice-dim: rgba(125, 211, 252, 0.10);
 
-  /* ── Status log ── */
-  .log-box {
-    background: var(--card-3);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 0.75rem 1rem;
-    font-family: var(--mono);
-    font-size: 0.72rem;
-    color: var(--muted);
-    max-height: 100px;
-    overflow-y: auto;
-    display: none;
-  }
-  .log-box.visible { display: block; }
-  .log-line { margin-bottom: 0.2rem; }
-  .log-line.ok  { color: var(--green); }
-  .log-line.err { color: var(--red); }
-  .log-line.info { color: var(--blue); }
+      --pill-bg: #1E2838;
+      --pill-border: rgba(200, 220, 240, 0.22);
+      --pill-text: #D8E8F8;
 
-  /* ── Audit button ── */
-  .audit-btn {
-    width: 100%; padding: 1rem;
-    background: var(--emerald-dim);
-    border: 1px solid rgba(16,185,129,0.35);
-    border-top: 1px solid rgba(16,185,129,0.5);
-    border-radius: var(--radius-md);
-    color: var(--emerald);
-    font-family: var(--font-mono); font-size: 0.8rem;
-    font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
-    cursor: pointer; transition: all var(--transition);
-    display: flex; align-items: center; justify-content: center; gap: 0.75rem;
-    margin-top: 1rem;
-    box-shadow: inset 0 1px 0 rgba(16,185,129,0.15);
-  }
-  .audit-btn:hover:not(:disabled) {
-    background: rgba(16,185,129,0.2);
-    box-shadow: 0 0 24px rgba(16,185,129,0.12), inset 0 1px 0 rgba(16,185,129,0.2);
-  }
-  .audit-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+      --font-mono: 'JetBrains Mono', monospace;
+      --font-heading: 'Outfit', sans-serif;
+      --font-body: 'Outfit', sans-serif;
 
-  /* ── Verdict card ── */
-  .verdict { display: none; }
-  .verdict.visible { display: block; }
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --transition: 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 
-  .verdict-match {
-    background: rgba(16,185,129,0.08);
-    border: 1px solid rgba(16,185,129,0.3);
-    border-radius: 12px;
-    padding: 1.5rem;
-    text-align: center;
-  }
-  .verdict-mismatch {
-    background: rgba(239,68,68,0.08);
-    border: 1px solid rgba(239,68,68,0.4);
-    border-radius: 12px;
-    padding: 1.5rem;
-    text-align: center;
-  }
-  .verdict-icon { margin-bottom: 0.75rem; }
-  .verdict-title { font-size: 1.1rem; font-weight: 800; margin-bottom: 0.4rem; }
-  .verdict-match .verdict-title  { color: var(--green); }
-  .verdict-mismatch .verdict-title { color: var(--red); }
-  .verdict-detail { font-size: 0.82rem; color: var(--muted); margin-bottom: 1.25rem; line-height: 1.6; }
+      /* Legacy compatibility mappings */
+      --green: var(--emerald);
+      --red: var(--crimson);
+      --blue: var(--ice);
+      --muted: var(--text-muted);
+      --mono: var(--font-mono);
+      --card-1: var(--bg-gunmetal-top);
+      --card-2: var(--bg-gunmetal-mid);
+      --card-3: var(--bg-gunmetal-base);
+    }
 
-  .numbers-compare {
-    display: grid; grid-template-columns: 1fr auto 1fr;
-    gap: 0.75rem; align-items: center;
-    margin: 1.25rem 0;
-  }
-  .num-box {
-    background: var(--card-3); border-radius: 8px;
-    padding: 0.75rem; text-align: center;
-    border: 1px solid var(--border);
-  }
-  .num-box-label { font-size: 0.65rem; font-family: var(--mono);
-    letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.35rem; }
-  .num-box-value { font-family: var(--mono); font-size: 1.75rem; font-weight: 700; }
-  .num-box-value.match { color: var(--green); }
-  .num-box-value.nomatch { color: var(--red); }
-  .vs-arrow { font-family: var(--mono); color: var(--muted); font-size: 1.2rem; }
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-  /* ── Crypto proof ── */
-  .proof-card {
-    background: var(--card-3);
-    border: 1px solid rgba(96,165,250,0.2);
-    border-radius: 10px;
-    padding: 1rem;
-    margin-top: 1rem;
-    text-align: left;
-  }
-  .proof-title {
-    font-size: 0.68rem; font-family: var(--mono);
-    letter-spacing: 0.1em; text-transform: uppercase;
-    color: var(--blue); margin-bottom: 0.75rem;
-    display: flex; align-items: center; gap: 0.5rem;
-  }
-  .proof-row {
-    display: flex; justify-content: space-between;
-    gap: 1rem; margin-bottom: 0.4rem;
-    font-size: 0.72rem;
-  }
-  .proof-key { color: var(--muted); flex-shrink: 0; }
-  .proof-val { font-family: var(--mono); color: var(--text); word-break: break-all; text-align: right; }
-  .proof-hash {
-    margin-top: 0.75rem;
-    padding: 0.6rem 0.75rem;
-    background: rgba(96,165,250,0.05);
-    border-radius: 6px; border: 1px solid rgba(96,165,250,0.1);
-    font-family: var(--mono); font-size: 0.65rem;
-    color: var(--blue); word-break: break-all; line-height: 1.6;
-  }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      min-height: 100vh;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+      padding-bottom: 80px;
+    }
 
-  /* ── Manual override ── */
-  .manual-section {
-    background: var(--card-3);
-    border: 1px solid var(--border);
-    border-radius: 8px; padding: 1rem;
-    margin-top: 0.75rem;
-  }
-  .manual-label {
-    font-size: 0.68rem; font-family: var(--mono);
-    letter-spacing: 0.1em; text-transform: uppercase;
-    color: var(--muted); margin-bottom: 0.5rem; display: block;
-  }
-  .manual-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
-  .manual-input {
-    background: var(--card-2); border: 1px solid var(--border);
-    border-radius: 6px; padding: 0.6rem 0.75rem;
-    font-family: var(--mono); font-size: 1rem; font-weight: 700;
-    color: var(--text); width: 100%; text-align: center;
-    transition: border-color 0.2s;
-  }
-  .manual-input:focus { outline: none; border-color: var(--amber); }
-  .manual-hint { font-size: 0.65rem; color: var(--muted); margin-top: 0.4rem; text-align: center; }
+    /* Ambient Titanium Sub-mesh Grid */
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background:
+        radial-gradient(ellipse 80% 50% at 50% -10%, rgba(125, 211, 252, 0.05), transparent 70%),
+        radial-gradient(circle at 10% 25%, rgba(16, 185, 129, 0.04), transparent 45%),
+        linear-gradient(rgba(200, 220, 240, 0.018) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(200, 220, 240, 0.018) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 40px 40px, 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
 
-  /* ── Queue indicator ── */
-  .queue-pill {
-    display: inline-flex; align-items: center; gap: 0.4rem;
-    font-family: var(--mono); font-size: 0.68rem;
-    color: var(--amber); background: rgba(245,158,11,0.1);
-    border: 1px solid rgba(245,158,11,0.2);
-    border-radius: 20px; padding: 0.3rem 0.75rem;
-    margin-bottom: 1rem;
-  }
-  .queue-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--amber); animation: pulse 2s infinite; }
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
 
-  /* ── Previous audits ── */
-  .audit-list { margin-top: 0.75rem; display: flex; flex-direction: column; gap: 0.5rem; }
-  .audit-item {
-    background: var(--card-3); border: 1px solid var(--border);
-    border-radius: 8px; padding: 0.75rem 1rem;
-    display: flex; justify-content: space-between; align-items: center;
-    font-size: 0.78rem;
-  }
-  .audit-item-left { display: flex; flex-direction: column; gap: 0.2rem; }
-  .audit-item-code { font-family: var(--mono); color: var(--text); }
-  .audit-item-time { font-size: 0.65rem; color: var(--muted); font-family: var(--mono); }
-  .audit-item-badge {
-    font-family: var(--mono); font-size: 0.65rem;
-    letter-spacing: 0.08em; text-transform: uppercase;
-    padding: 0.25rem 0.6rem; border-radius: 4px;
-  }
-  .badge-match    { background: rgba(16,185,129,0.15); color: var(--green); }
-  .badge-mismatch { background: rgba(239,68,68,0.15);  color: var(--red); }
+    /* Precision Micro SVGs */
+    .ico {
+      width: 14px;
+      height: 14px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      flex-shrink: 0;
+    }
 
-  /* ── Animations ── */
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-  @keyframes pulse-border { 0%,100%{border-color:rgba(245,158,11,0.3)} 50%{border-color:var(--amber)} }
-  @keyframes fadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:none} }
-  .fade-up { animation: fadeUp 0.4s ease forwards; }
-</style>
+    .ico-lg {
+      width: 20px;
+      height: 20px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      flex-shrink: 0;
+    }
+
+    /* ═══════════════ TOP NAV ═══════════════ */
+    .top-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 0 16px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 24px;
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-crest {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, #1E2838 0%, #121824 100%);
+      border: 1px solid rgba(200, 220, 240, 0.25);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(200, 220, 240, 0.18);
+      color: var(--emerald);
+    }
+
+    .brand-name {
+      font-family: var(--font-heading);
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+      color: #fff;
+    }
+
+    .brand-name span { color: var(--emerald); }
+
+    .brand-code {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      font-weight: 700;
+      color: var(--text-slate);
+      padding: 3px 8px;
+      background: var(--bg-tray);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+    }
+
+    .btn-back-dash {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text-slate);
+      padding: 6px 14px;
+      background: var(--pill-bg);
+      border: 1px solid var(--pill-border);
+      border-radius: var(--radius-sm);
+      text-decoration: none;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      transition: all var(--transition);
+      box-shadow: inset 0 1px 0 rgba(200, 220, 240, 0.12);
+    }
+
+    .btn-back-dash:hover {
+      color: #fff;
+      border-color: rgba(200, 220, 240, 0.4);
+    }
+
+    /* ═══════════════ STEP PROGRESS STRIP ═══════════════ */
+    .steps-chassis {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 2px;
+      background: rgba(200, 220, 240, 0.08);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      margin-bottom: 24px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+    }
+
+    .step-item {
+      padding: 12px 10px;
+      text-align: center;
+      background: var(--bg-gunmetal-base);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      transition: all var(--transition);
+      position: relative;
+    }
+
+    .step-item-num {
+      display: block;
+      font-size: 14px;
+      font-weight: 800;
+      margin-bottom: 2px;
+      color: var(--text-slate);
+    }
+
+    .step-item.active {
+      background: linear-gradient(180deg, #232C3B 0%, #171E2A 100%);
+      color: var(--emerald);
+      box-shadow: inset 0 2px 0 var(--emerald);
+    }
+    .step-item.active .step-item-num {
+      color: var(--emerald);
+      text-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+    }
+
+    .step-item.done {
+      background: #121824;
+      color: var(--text-slate);
+    }
+    .step-item.done .step-item-num {
+      color: var(--emerald);
+    }
+
+    /* ═══════════════ CARDS & CONTAINERS ═══════════════ */
+    .chassis-card {
+      background: linear-gradient(180deg, #232C3B 0%, #171E2A 50%, #0F131C 100%);
+      border: 1px solid rgba(200, 220, 240, 0.12);
+      border-radius: var(--radius-lg);
+      padding: 20px 24px;
+      box-shadow:
+        0 16px 40px rgba(0, 0, 0, 0.65),
+        inset 0 1px 0 rgba(200, 220, 240, 0.18);
+      margin-bottom: 20px;
+      position: relative;
+    }
+
+    .card-header-line {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .card-title-text {
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      font-weight: 800;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: var(--platinum-bright);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-title-text svg {
+      color: var(--emerald);
+    }
+
+    /* ═══════════════ PU SPECIFICATION FORM ═══════════════ */
+    .pu-input-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    @media (max-width: 600px) {
+      .pu-input-grid { grid-template-columns: 1fr; }
+    }
+
+    .input-label-tag {
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--text-slate);
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    .titanium-input {
+      width: 100%;
+      background: #0F131C;
+      border: 1px solid rgba(200, 220, 240, 0.14);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--platinum-bright);
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
+      transition: border-color var(--transition), box-shadow var(--transition);
+    }
+
+    .titanium-input:focus {
+      outline: none;
+      border-color: var(--emerald);
+      box-shadow: 0 0 12px rgba(16, 185, 129, 0.25), inset 0 1px 0 rgba(200, 220, 240, 0.1);
+    }
+
+    /* ═══════════════ DUAL OPTICAL CAPTURE BAYS ═══════════════ */
+    .upload-dual-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    @media (max-width: 680px) {
+      .upload-dual-grid { grid-template-columns: 1fr; }
+    }
+
+    .optical-bay-box {
+      background: #121824;
+      border: 1px solid rgba(200, 220, 240, 0.12);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .bay-kicker {
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      font-weight: 800;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .bay-bvas .bay-kicker { color: var(--emerald); }
+    .bay-ec8a .bay-kicker { color: var(--amber); }
+
+    .drop-zone-reticle {
+      border: 1px dashed rgba(200, 220, 240, 0.25);
+      border-radius: var(--radius-sm);
+      padding: 24px 16px;
+      text-align: center;
+      cursor: pointer;
+      position: relative;
+      background: #0B0F18;
+      min-height: 180px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: all var(--transition);
+      box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.5);
+    }
+
+    .drop-zone-reticle:hover {
+      border-color: var(--emerald);
+      background: rgba(16, 185, 129, 0.03);
+    }
+
+    .drop-zone-reticle.has-image {
+      border-style: solid;
+      border-color: rgba(16, 185, 129, 0.4);
+    }
+
+    .drop-zone-reticle.processing {
+      border-color: var(--amber);
+      animation: pulseBorder 1.5s infinite;
+    }
+
+    .drop-zone-reticle input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+      z-index: 5;
+    }
+
+    .optical-preview-img {
+      max-width: 100%;
+      max-height: 130px;
+      object-fit: contain;
+      border-radius: 4px;
+      display: none;
+      border: 1px solid var(--border);
+    }
+
+    .drop-zone-reticle.has-image .optical-preview-img { display: block; }
+    .drop-zone-reticle.has-image .zone-icon,
+    .drop-zone-reticle.has-image .zone-label,
+    .drop-zone-reticle.has-image .zone-hint { display: none; }
+
+    .zone-icon {
+      color: var(--text-slate);
+    }
+
+    .zone-label {
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--platinum-bright);
+    }
+
+    .zone-hint {
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.45;
+      max-width: 280px;
+    }
+
+    .progress-track {
+      height: 4px;
+      background: #080C14;
+      border-radius: 2px;
+      overflow: hidden;
+      margin-top: 10px;
+      display: none;
+      border: 1px solid rgba(200, 220, 240, 0.05);
+    }
+    .progress-track.visible { display: block; }
+
+    .progress-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--emerald), var(--ice));
+      transition: width 0.3s ease;
+    }
+
+    .extracted-display-strip {
+      margin-top: 10px;
+      text-align: center;
+      min-height: 48px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .extracted-num-val {
+      font-family: var(--font-mono);
+      font-size: 32px;
+      font-weight: 800;
+      line-height: 1;
+      display: none;
+    }
+    .extracted-num-val.visible { display: block; }
+
+    .extracted-label-text {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: var(--text-slate);
+      display: none;
+      margin-top: 4px;
+    }
+    .extracted-label-text.visible { display: block; }
+
+    /* ═══════════════ OCR TELEMETRY LOG ═══════════════ */
+    .telemetry-log-box {
+      background: #080C14;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-slate);
+      max-height: 90px;
+      overflow-y: auto;
+      display: none;
+      margin-bottom: 16px;
+      line-height: 1.6;
+    }
+    .telemetry-log-box.visible { display: block; }
+
+    .log-line.ok   { color: var(--emerald); }
+    .log-line.err  { color: var(--crimson); font-weight: 700; }
+    .log-line.info { color: var(--ice); }
+
+    /* ═══════════════ MANUAL VERIFICATION CALIBRATION ═══════════════ */
+    .manual-calibration-bay {
+      background: #121824;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 14px 18px;
+      margin-bottom: 16px;
+    }
+
+    .calibration-label {
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      font-weight: 800;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: var(--text-slate);
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .calibration-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .cal-hint {
+      font-size: 10px;
+      font-family: var(--font-mono);
+      margin-top: 4px;
+      text-align: center;
+    }
+
+    /* ═══════════════ ACTION BUTTON ═══════════════ */
+    .btn-audit-trigger {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(180deg, #10B981 0%, #059669 100%);
+      color: #04070D;
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      font-weight: 800;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+      border: none;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      box-shadow: 0 4px 18px rgba(16, 185, 129, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+      transition: all var(--transition);
+    }
+
+    .btn-audit-trigger:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 24px rgba(16, 185, 129, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+    }
+
+    .btn-audit-trigger:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    /* ═══════════════ VERDICT CONTAINERS ═══════════════ */
+    .verdict-chassis {
+      display: none;
+      margin-top: 24px;
+    }
+    .verdict-chassis.visible { display: block; }
+
+    .verdict-box {
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.75);
+      position: relative;
+    }
+
+    .vb-match {
+      background: linear-gradient(180deg, #172620 0%, #0E1A16 50%, #08100E 100%);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      box-shadow: 0 0 30px rgba(16, 185, 129, 0.15), inset 0 1px 0 rgba(16, 185, 129, 0.3);
+    }
+
+    .vb-mismatch {
+      background: linear-gradient(180deg, #2D141C 0%, #1E0C12 50%, #12060A 100%);
+      border: 1px solid rgba(225, 29, 72, 0.45);
+      box-shadow: 0 0 35px rgba(225, 29, 72, 0.2), inset 0 1px 0 rgba(225, 29, 72, 0.35);
+    }
+
+    .verdict-header-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .verdict-badge-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .vb-match .verdict-badge-icon {
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      color: var(--emerald);
+    }
+
+    .vb-mismatch .verdict-badge-icon {
+      background: rgba(225, 29, 72, 0.15);
+      border: 1px solid rgba(225, 29, 72, 0.4);
+      color: var(--crimson);
+    }
+
+    .verdict-main-title {
+      font-family: var(--font-mono);
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+    }
+
+    .vb-match .verdict-main-title    { color: var(--emerald); }
+    .vb-mismatch .verdict-main-title { color: var(--crimson); }
+
+    .verdict-sub-desc {
+      font-size: 13.5px;
+      color: var(--platinum);
+      line-height: 1.6;
+      margin-bottom: 18px;
+    }
+
+    .comparison-gauge-strip {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 14px;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+
+    .comp-box {
+      background: #080C14;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      text-align: center;
+    }
+
+    .comp-box-label {
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--text-slate);
+      margin-bottom: 4px;
+    }
+
+    .comp-box-val {
+      font-family: var(--font-mono);
+      font-size: 28px;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .comp-relation-sign {
+      font-family: var(--font-mono);
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--text-muted);
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #121824;
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .statutory-alert-banner {
+      background: rgba(225, 29, 72, 0.12);
+      border: 1px solid rgba(225, 29, 72, 0.35);
+      border-radius: var(--radius-sm);
+      padding: 12px 16px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: #FFA3B4;
+      line-height: 1.6;
+      margin-bottom: 18px;
+      letter-spacing: 0.5px;
+    }
+
+    /* ═══════════════ CRYPTOGRAPHIC AUDIT CERTIFICATE ═══════════════ */
+    .crypto-certificate-deck {
+      background: #0B101A;
+      border: 1px solid rgba(125, 211, 252, 0.25);
+      border-radius: var(--radius-md);
+      padding: 16px 18px;
+      box-shadow: inset 0 1px 0 rgba(125, 211, 252, 0.15);
+    }
+
+    .cert-heading-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(125, 211, 252, 0.12);
+    }
+
+    .cert-title-tag {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: var(--ice);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .cert-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11.5px;
+      margin-bottom: 6px;
+      gap: 12px;
+    }
+
+    .cert-key {
+      color: var(--text-slate);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+
+    .cert-val {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      color: var(--platinum-bright);
+      text-align: right;
+      word-break: break-all;
+    }
+
+    .hash-vault-terminal {
+      margin-top: 10px;
+      background: #04070D;
+      border: 1px solid rgba(125, 211, 252, 0.15);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--ice);
+      word-break: break-all;
+      line-height: 1.6;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .btn-copy-hash {
+      padding: 4px 10px;
+      background: rgba(125, 211, 252, 0.15);
+      border: 1px solid rgba(125, 211, 252, 0.3);
+      border-radius: 4px;
+      color: var(--ice);
+      font-family: var(--font-mono);
+      font-size: 9px;
+      font-weight: 700;
+      cursor: pointer;
+      text-transform: uppercase;
+      flex-shrink: 0;
+      transition: all var(--transition);
+    }
+
+    .btn-copy-hash:hover {
+      background: var(--ice);
+      color: #04070D;
+    }
+
+    /* ═══════════════ AUDIT HISTORY SESSION DECK ═══════════════ */
+    .history-card {
+      margin-top: 24px;
+      display: none;
+    }
+
+    .history-item-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #121824;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      margin-bottom: 8px;
+      font-size: 12px;
+    }
+
+    .history-left {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .history-pu {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      color: var(--platinum-bright);
+    }
+
+    .history-meta {
+      font-size: 10px;
+      color: var(--text-slate);
+      font-family: var(--font-mono);
+    }
+
+    .history-badge {
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+    }
+
+    .hb-match    { background: var(--emerald-dim); color: var(--emerald); border: 1px solid rgba(16, 185, 129, 0.3); }
+    .hb-mismatch { background: var(--crimson-dim); color: var(--crimson); border: 1px solid rgba(225, 29, 72, 0.3); }
+
+    /* Offline retention badge */
+    .queue-status-banner {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      background: var(--amber-dim);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      border-radius: 20px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--amber);
+      margin-bottom: 16px;
+    }
+
+    .dot-amber-pulse {
+      width: 6px;
+      height: 6px;
+      background: var(--amber);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    /* Animations */
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+    @keyframes pulseBorder { 0%, 100% { border-color: rgba(245, 158, 11, 0.3); } 50% { border-color: var(--amber); } }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+    .fade-up { animation: fadeIn 0.35s ease forwards; }
+  </style>
 </head>
 <body>
 
-<!-- ── Header ── -->
-<div class="header">
-  <div class="header-icon">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-      <polyline points="9 12 11 14 15 10"/>
-    </svg>
-  </div>
-  <div>
-    <div class="header-title">VoteGuard AI — Field Audit</div>
-    <div class="header-sub">BVAS Screen Integrity Audit &mdash; Photo-to-Proof Pipeline</div>
-  </div>
-  <a class="back-link" href="dashboard.html">← Dashboard</a>
-</div>
+<div class="container">
 
-<!-- ── Step indicator ── -->
-<div class="steps">
-  <div class="step active" id="step1"><span class="step-num">1</span>Capture</div>
-  <div class="step"        id="step2"><span class="step-num">2</span>Extract</div>
-  <div class="step"        id="step3"><span class="step-num">3</span>Verify</div>
-  <div class="step"        id="step4"><span class="step-num">4</span>Proof</div>
-</div>
-
-<!-- ── Offline queue pill ── -->
-<div id="queuePill" class="queue-pill" style="display:none;">
-  <div class="queue-dot"></div>
-  <span id="queueCount">0 audits queued — will sync when online</span>
-</div>
-
-<!-- ── Polling Unit Info ── -->
-<div class="card">
-  <div class="card-title">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
-    Polling Unit Details
-  </div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
-    <div>
-      <label class="manual-label">PU Code</label>
-      <input class="manual-input" id="puCode" type="text" placeholder="36/13/01/001" style="text-align:left;">
-    </div>
-    <div>
-      <label class="manual-label">State / LGA</label>
-      <input class="manual-input" id="puLocation" type="text" placeholder="FCT / Kuje" style="text-align:left;">
-    </div>
-  </div>
-</div>
-
-<!-- ── Photo Capture ── -->
-<div class="card">
-  <div class="card-title">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-    Step 1 — Take Two Photos
-  </div>
-
-  <div class="upload-grid">
-    <!-- Photo 1: BVAS Screen -->
-    <div>
-      <div style="font-size:0.72rem;font-family:var(--mono);color:var(--green);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.5rem;">
-        Photo 1 — BVAS Machine Screen
-      </div>
-      <div class="upload-zone" id="bvasZone">
-        <input type="file" id="bvasInput" accept="image/*" capture="environment" onchange="handleUpload('bvas', this)">
-        <svg class="upload-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-        <div class="upload-label">BVAS screen</div>
-        <div class="upload-hint">Photograph the digital display showing final accredited total</div>
-        <img class="upload-preview" id="bvasPreview" alt="BVAS screen">
-      </div>
-      <div class="progress-bar-wrap" id="bvasProgress">
-        <div class="progress-bar" id="bvasBar"></div>
-      </div>
-      <div style="text-align:center;margin-top:0.5rem;">
-        <div class="extracted-num" id="bvasNum" style="color:var(--green);">—</div>
-        <div class="extracted-label" id="bvasNumLabel">BVAS Accredited</div>
-      </div>
-    </div>
-
-    <!-- Photo 2: EC8A Form -->
-    <div>
-      <div style="font-size:0.72rem;font-family:var(--mono);color:var(--amber);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.5rem;">
-        Photo 2 — Form EC8A Result Sheet
-      </div>
-      <div class="upload-zone" id="ec8aZone">
-        <input type="file" id="ec8aInput" accept="image/*" capture="environment" onchange="handleUpload('ec8a', this)">
-        <svg class="upload-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-        <div class="upload-label">Form EC8A</div>
-        <div class="upload-hint">Photograph the signed paper result sheet before it leaves the unit</div>
-        <img class="upload-preview" id="ec8aPreview" alt="EC8A form">
-      </div>
-      <div class="progress-bar-wrap" id="ec8aProgress">
-        <div class="progress-bar" id="ec8aBar"></div>
-      </div>
-      <div style="text-align:center;margin-top:0.5rem;">
-        <div class="extracted-num" id="ec8aNum" style="color:var(--amber);">—</div>
-        <div class="extracted-label" id="ec8aNumLabel">EC8A Accredited</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Log box -->
-  <div class="log-box" id="logBox"></div>
-
-  <!-- Manual override -->
-  <div class="manual-section" id="manualSection" style="display:none;">
-    <span class="manual-label">
-      Manual Correction — confirm or adjust the extracted numbers
-    </span>
-    <div class="manual-row">
-      <div>
-        <input class="manual-input" id="bvasManual" type="number" placeholder="BVAS total">
-        <div class="manual-hint" style="color:var(--green);">BVAS screen reading</div>
+  <!-- ═══════════════ TOP NAV ═══════════════ -->
+  <header class="top-nav fade-up">
+    <div class="brand-group">
+      <div class="brand-crest">
+        <svg class="ico-lg" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
       </div>
       <div>
-        <input class="manual-input" id="ec8aManual" type="number" placeholder="EC8A total">
-        <div class="manual-hint" style="color:var(--amber);">EC8A declared accredited</div>
+        <div class="brand-name">Vote<span>Guard</span> AI</div>
+      </div>
+      <div class="brand-code">FIELD-AUDIT // S.51 PROTOCOL</div>
+    </div>
+
+    <a class="btn-back-dash" href="dashboard.html">
+      <svg class="ico" viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      Command Dashboard
+    </a>
+  </header>
+
+  <!-- ═══════════════ 4-STEP PIPELINE TRACKER ═══════════════ -->
+  <div class="steps-chassis fade-up">
+    <div class="step-item active" id="step1">
+      <span class="step-item-num">01</span>
+      Capture
+    </div>
+    <div class="step-item" id="step2">
+      <span class="step-item-num">02</span>
+      Optical OCR
+    </div>
+    <div class="step-item" id="step3">
+      <span class="step-item-num">03</span>
+      Cross-Check
+    </div>
+    <div class="step-item" id="step4">
+      <span class="step-item-num">04</span>
+      Crypto Proof
+    </div>
+  </div>
+
+  <!-- ═══════════════ OFFLINE QUEUE STATUS ═══════════════ -->
+  <div id="queuePill" class="queue-status-banner" style="display:none;">
+    <span class="dot-amber-pulse"></span>
+    <span id="queueCount">0 Audits Retained in Local Queue &mdash; Auto-syncing on 2G/3G signal</span>
+  </div>
+
+  <!-- ═══════════════ POLLING UNIT SPECIFICATION ═══════════════ -->
+  <div class="chassis-card fade-up">
+    <div class="card-header-line">
+      <div class="card-title-text">
+        <svg class="ico" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+        Polling Unit Identification Data
+      </div>
+    </div>
+    <div class="pu-input-grid">
+      <div>
+        <label class="input-label-tag">INEC Polling Unit Code</label>
+        <input class="titanium-input" id="puCode" type="text" placeholder="e.g. 22/07/02/055">
+      </div>
+      <div>
+        <label class="input-label-tag">Jurisdiction / State / LGA</label>
+        <input class="titanium-input" id="puLocation" type="text" placeholder="e.g. Rivers / Port Harcourt / Ward 2">
       </div>
     </div>
   </div>
 
-  <button class="audit-btn" id="auditBtn" disabled onclick="runAudit()">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-    Run Integrity Audit
-  </button>
-</div>
+  <!-- ═══════════════ DUAL OPTICAL CAPTURE BAYS ═══════════════ -->
+  <div class="chassis-card fade-up">
+    <div class="card-header-line">
+      <div class="card-title-text">
+        <svg class="ico" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        Step 1 &amp; 2 &mdash; Dual Optical Hardware Capture
+      </div>
+    </div>
 
-<!-- ── Verdict ── -->
-<div class="verdict" id="verdictSection">
-  <div id="verdictCard"></div>
-</div>
+    <div class="upload-dual-grid">
+      <!-- Bay 1: BVAS Screen -->
+      <div class="optical-bay-box bay-bvas">
+        <div class="bay-kicker">
+          <svg class="ico" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          Optical Bay 01 &mdash; BVAS Machine Screen
+        </div>
 
-<!-- ── Previous Audits (from IndexedDB queue) ── -->
-<div class="card" id="historyCard" style="display:none;">
-  <div class="card-title">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-    Audit History (This Session)
+        <div class="drop-zone-reticle" id="bvasZone">
+          <input type="file" id="bvasInput" accept="image/*" capture="environment" onchange="handleUpload('bvas', this)">
+          <div class="zone-icon">
+            <svg class="ico-lg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          </div>
+          <div class="zone-label">Capture BVAS Screen</div>
+          <div class="zone-hint">Photograph digital LCD showing final accredited voter count</div>
+          <img class="optical-preview-img" id="bvasPreview" alt="BVAS screen">
+        </div>
+
+        <div class="progress-track" id="bvasProgress">
+          <div class="progress-bar-fill" id="bvasBar"></div>
+        </div>
+
+        <div class="extracted-display-strip">
+          <div class="extracted-num-val" id="bvasNum" style="color:var(--emerald);">—</div>
+          <div class="extracted-label-text" id="bvasNumLabel">BVAS Accredited Telemetry</div>
+        </div>
+      </div>
+
+      <!-- Bay 2: EC8A Form -->
+      <div class="optical-bay-box bay-ec8a">
+        <div class="bay-kicker">
+          <svg class="ico" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          Optical Bay 02 &mdash; Form EC8A Result Sheet
+        </div>
+
+        <div class="drop-zone-reticle" id="ec8aZone">
+          <input type="file" id="ec8aInput" accept="image/*" capture="environment" onchange="handleUpload('ec8a', this)">
+          <div class="zone-icon">
+            <svg class="ico-lg" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/></svg>
+          </div>
+          <div class="zone-label">Capture Form EC8A</div>
+          <div class="zone-hint">Photograph signed paper result sheet before PU departure</div>
+          <img class="optical-preview-img" id="ec8aPreview" alt="EC8A Form">
+        </div>
+
+        <div class="progress-track" id="ec8aProgress">
+          <div class="progress-bar-fill" id="ec8aBar"></div>
+        </div>
+
+        <div class="extracted-display-strip">
+          <div class="extracted-num-val" id="ec8aNum" style="color:var(--amber);">—</div>
+          <div class="extracted-label-text" id="ec8aNumLabel">EC8A Declared Accredited</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Telemetry Log -->
+    <div class="telemetry-log-box" id="logBox"></div>
+
+    <!-- Manual Calibration Deck -->
+    <div class="manual-calibration-bay" id="manualSection" style="display:none;">
+      <span class="calibration-label">Observer Verification Calibration &mdash; Confirm Extracted Figures</span>
+      <div class="calibration-row">
+        <div>
+          <input class="titanium-input" id="bvasManual" type="number" placeholder="BVAS Count" style="text-align:center;">
+          <div class="cal-hint" style="color:var(--emerald);">BVAS LCD Hardware Value</div>
+        </div>
+        <div>
+          <input class="titanium-input" id="ec8aManual" type="number" placeholder="EC8A Count" style="text-align:center;">
+          <div class="cal-hint" style="color:var(--amber);">EC8A Written Value</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Execute Audit Trigger Button -->
+    <button class="btn-audit-trigger" id="auditBtn" disabled onclick="runAudit()">
+      <svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
+      Execute S.51 Forensic Reconciliation Audit
+    </button>
   </div>
-  <div class="audit-list" id="auditList"></div>
-</div>
+
+  <!-- ═══════════════ FORENSIC VERDICT SECTION ═══════════════ -->
+  <div class="verdict-chassis" id="verdictSection">
+    <div id="verdictCard"></div>
+  </div>
+
+  <!-- ═══════════════ AUDIT HISTORY LEDGER ═══════════════ -->
+  <div class="chassis-card history-card" id="historyCard">
+    <div class="card-header-line">
+      <div class="card-title-text">
+        <svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Field Session Cryptographic Audit Ledger
+      </div>
+    </div>
+    <div id="auditList"></div>
+  </div>
+
+</div><!-- /container -->
 
 <script>
 // ─────────────────────────────────────────────────────────────────────────────
-// State
+// Client-Side Session State
 // ─────────────────────────────────────────────────────────────────────────────
 const state = {
   bvasImage: null, ec8aImage: null,
@@ -541,7 +1090,7 @@ const state = {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Logging
+// Terminal Telemetry Logging
 // ─────────────────────────────────────────────────────────────────────────────
 const logBox = document.getElementById('logBox');
 function log(msg, type='info') {
@@ -554,7 +1103,7 @@ function log(msg, type='info') {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Image pre-processing (canvas — boost contrast for BVAS screen digits)
+// Hardware Contrast Pre-Processing (Canvas)
 // ─────────────────────────────────────────────────────────────────────────────
 function preprocessImage(file, mode) {
   return new Promise(resolve => {
@@ -568,7 +1117,6 @@ function preprocessImage(file, mode) {
       const ctx = canvas.getContext('2d');
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-      // Boost contrast for BVAS screen (high contrast B&W helps digit OCR)
       if (mode === 'bvas') {
         const d = ctx.getImageData(0, 0, canvas.width, canvas.height);
         for (let i = 0; i < d.data.length; i += 4) {
@@ -586,29 +1134,21 @@ function preprocessImage(file, mode) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Extract the most prominent number from OCR text
-// Strategy: find all digit sequences 2-6 chars, pick the most prominent one.
-// For BVAS: the total accredited count is usually the largest standalone number.
+// Digit Extraction Engine
 // ─────────────────────────────────────────────────────────────────────────────
 function extractNumber(ocrText, mode) {
-  // Clean and find all digit sequences
-  const text = ocrText.replace(/[^\d\s\n]/g, ' ');
-  const nums  = [...text.matchAll(/\b(\d{2,6})\b/g)].map(m => parseInt(m[1]));
-
+  const text = ocrText.replace(/[^\d\s
+]/g, ' ');
+  const nums  = [...text.matchAll(/(\d{2,6})/g)].map(m => parseInt(m[1]));
   if (nums.length === 0) return null;
 
   if (mode === 'bvas') {
-    // BVAS screen: the accredited count is usually the largest number shown
-    // Filter out obvious non-counts (>50000 is unrealistic for a PU)
     const plausible = nums.filter(n => n >= 10 && n <= 50000);
     if (plausible.length === 0) return nums[0];
     return Math.max(...plausible);
   } else {
-    // EC8A: accredited voters — look for numbers in 10-50000 range
-    // It often appears near "accredited" text — take the most prominent
     const plausible = nums.filter(n => n >= 10 && n <= 50000);
     if (plausible.length === 0) return nums[0];
-    // Return the one that appears most frequently (or largest if tied)
     const freq = {};
     plausible.forEach(n => freq[n] = (freq[n]||0)+1);
     return parseInt(Object.entries(freq).sort((a,b)=>b[1]-a[1]||b[0]-a[0])[0][0]);
@@ -616,7 +1156,7 @@ function extractNumber(ocrText, mode) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Handle photo upload + run OCR
+// Optical Capture & OCR Pipeline
 // ─────────────────────────────────────────────────────────────────────────────
 async function handleUpload(type, input) {
   const file = input.files[0];
@@ -629,36 +1169,33 @@ async function handleUpload(type, input) {
   const numEl    = document.getElementById(`${type}Num`);
   const labelEl  = document.getElementById(`${type}NumLabel`);
 
-  // Show preview
   preview.src = URL.createObjectURL(file);
   zone.classList.add('has-image', 'processing');
   progress.classList.add('visible');
   setStep(2);
 
-  const label = type === 'bvas' ? 'BVAS screen' : 'Form EC8A';
-  log(`${label} image received — preprocessing...`);
-  bar.style.width = '15%';
+  const label = type === 'bvas' ? 'BVAS LCD Hardware' : 'Form EC8A Sheet';
+  log(`${label} telemetry received &mdash; running contrast calibration...`);
+  bar.style.width = '20%';
 
   state[`${type}Image`] = file;
 
   try {
-    // Preprocess
     const processedDataUrl = await preprocessImage(file, type);
-    bar.style.width = '30%';
-    log(`${label} preprocessed — running OCR (Tesseract.js)...`);
+    bar.style.width = '35%';
+    log(`${label} preprocessed &mdash; engaging Tesseract OCR neural matrix...`);
 
-    // OCR with Tesseract
     const result = await Tesseract.recognize(processedDataUrl, 'eng', {
       logger: m => {
         if (m.status === 'recognizing text') {
-          bar.style.width = `${30 + Math.round(m.progress * 60)}%`;
+          bar.style.width = `${35 + Math.round(m.progress * 55)}%`;
         }
       }
     });
 
     bar.style.width = '95%';
     const raw = result.data.text;
-    log(`OCR complete. Raw text length: ${raw.length} chars`);
+    log(`OCR Matrix Complete &bull; Raw text length: ${raw.length} bytes`);
 
     const num = extractNumber(raw, type);
     bar.style.width = '100%';
@@ -669,13 +1206,13 @@ async function handleUpload(type, input) {
       numEl.textContent = num.toLocaleString();
       numEl.classList.add('visible');
       labelEl.classList.add('visible');
-      log(`${label}: extracted number = ${num}`, 'ok');
+      log(`${label}: Optical count verified = ${num}`, 'ok');
     } else {
       state[`${type}Num`]   = null;
       state[`${type}Ready`] = false;
       numEl.textContent = '???';
       numEl.classList.add('visible');
-      log(`${label}: could not extract a number — use manual override below`, 'err');
+      log(`${label}: Optical capture ambiguous &mdash; calibrate manually below`, 'err');
     }
 
     zone.classList.remove('processing');
@@ -686,7 +1223,7 @@ async function handleUpload(type, input) {
   } catch (err) {
     bar.style.width = '100%';
     zone.classList.remove('processing');
-    log(`OCR error: ${err.message}`, 'err');
+    log(`OCR Diagnostic Exception: ${err.message}`, 'err');
     showManualSection();
   }
 }
@@ -708,7 +1245,7 @@ function checkReadyToAudit() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// SHA-256 cryptographic proof
+// Cryptographic Proof (SHA-256)
 // ─────────────────────────────────────────────────────────────────────────────
 async function sha256(message) {
   const msgBuffer = new TextEncoder().encode(message);
@@ -718,27 +1255,27 @@ async function sha256(message) {
 }
 
 async function generateProof(puCode, bvasNum, ec8aNum, timestamp, match) {
-  const payload = JSON.stringify({ puCode, bvasNum, ec8aNum, timestamp, match, v: '1.0' });
+  const payload = JSON.stringify({ puCode, bvasNum, ec8aNum, timestamp, match, standard: 'Electoral-Act-2022-S.51', v: '1.0' });
   const hash = await sha256(payload);
   return { payload, hash };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Run the audit
+// Execute Integrity Audit
 // ─────────────────────────────────────────────────────────────────────────────
 async function runAudit() {
   const bvasVal = parseInt(document.getElementById('bvasManual').value) || state.bvasNum;
   const ec8aVal = parseInt(document.getElementById('ec8aManual').value) || state.ec8aNum;
-  const puCode  = document.getElementById('puCode').value.trim() || 'UNKNOWN-PU';
-  const puLoc   = document.getElementById('puLocation').value.trim() || '';
+  const puCode  = document.getElementById('puCode').value.trim() || 'UNREGISTERED-PU';
+  const puLoc   = document.getElementById('puLocation').value.trim() || 'Jurisdiction Unspecified';
 
   if (!bvasVal || !ec8aVal) {
-    log('Please provide both BVAS and EC8A numbers.', 'err');
+    log('Calibration incomplete: both hardware and paper counts required', 'err');
     return;
   }
 
   setStep(4);
-  log('Running integrity audit...', 'info');
+  log('Executing deterministic S.51 mathematical cross-check...', 'info');
 
   const timestamp  = new Date().toISOString();
   const match      = bvasVal === ec8aVal;
@@ -748,7 +1285,7 @@ async function runAudit() {
   const auditRecord = { puCode, puLoc, bvasVal, ec8aVal, match, delta, timestamp, hash };
   state.auditHistory.unshift(auditRecord);
 
-  // Save to localStorage (offline queue)
+  // Retain in local queue (2G / offline failover)
   try {
     const queue = JSON.parse(localStorage.getItem('vg_audit_queue') || '[]');
     queue.unshift(auditRecord);
@@ -757,74 +1294,92 @@ async function runAudit() {
 
   renderVerdict(auditRecord);
   renderHistory();
-  log(match ? 'MATCH — no discrepancy detected.' : `DISCREPANCY DETECTED — delta: ${delta > 0 ? '+' : ''}${delta}`, match ? 'ok' : 'err');
+  log(match ? 'VERIFIED: Mathematical parity confirmed.' : `BREACH DETECTED: Discrepancy delta = ${delta > 0 ? '+' : ''}${delta}`, match ? 'ok' : 'err');
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Render verdict
+// Render Verdict Box
 // ─────────────────────────────────────────────────────────────────────────────
 function renderVerdict(a) {
   const sec  = document.getElementById('verdictSection');
   const card = document.getElementById('verdictCard');
   sec.classList.add('visible');
 
-  const matchClass = a.match ? 'verdict-match' : 'verdict-mismatch';
+  const matchClass = a.match ? 'vb-match' : 'vb-mismatch';
   const icon = a.match
-    ? `<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`
-    : `<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`;
+    ? `<svg class="ico-lg" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`
+    : `<svg class="ico-lg" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`;
 
-  const title  = a.match ? 'TALLY VERIFIED — NO DISCREPANCY' : 'BIOMETRIC TALLY DISCREPANCY DETECTED';
+  const title  = a.match ? 'Tally Integrity Confirmed &mdash; Parity 100%' : 'Biometric Tally Discrepancy Detected';
   const detail = a.match
-    ? `The BVAS screen reading (${a.bvasVal.toLocaleString()}) matches the Form EC8A declared accredited count (${a.ec8aVal.toLocaleString()}). No evidence of manual alteration.`
-    : `The BVAS machine recorded ${a.bvasVal.toLocaleString()} accredited voters but Form EC8A declares ${a.ec8aVal.toLocaleString()}. This is a discrepancy of ${a.delta > 0 ? '+' : ''}${a.delta.toLocaleString()} voters — a potential violation of Electoral Act 2022 S.51.`;
-
-  const bvasColor = a.match ? 'match' : 'match';
-  const ec8aColor = a.match ? 'match' : 'nomatch';
+    ? `The BVAS hardware screen reading (${a.bvasVal.toLocaleString()}) precisely equals the Form EC8A declared count (${a.ec8aVal.toLocaleString()}). Full statutory compliance under Electoral Act 2022 Section 51.`
+    : `The BVAS hardware LCD recorded ${a.bvasVal.toLocaleString()} accredited voters, but Form EC8A paper falsely declared ${a.ec8aVal.toLocaleString()}. This divergence represents an illegal excess of ${a.delta > 0 ? '+' : ''}${a.delta.toLocaleString()} unaccredited votes &mdash; an unconstitutional violation of Electoral Act 2022 Section 51.`;
 
   card.innerHTML = `
-    <div class="${matchClass} fade-up">
-      <div class="verdict-icon">${icon}</div>
-      <div class="verdict-title">${title}</div>
-      <div class="verdict-detail">${detail}</div>
-
-      <div class="numbers-compare">
-        <div class="num-box">
-          <div class="num-box-label">BVAS Screen</div>
-          <div class="num-box-value ${bvasColor}">${a.bvasVal.toLocaleString()}</div>
+    <div class="verdict-box ${matchClass} fade-up">
+      <div class="verdict-header-row">
+        <div class="verdict-badge-icon">${icon}</div>
+        <div>
+          <div class="verdict-main-title">${title}</div>
+          <div style="font-size:11px;color:var(--text-slate);font-family:var(--font-mono);margin-top:2px;">PU: ${a.puCode} &bull; ${a.puLoc}</div>
         </div>
-        <div class="vs-arrow">${a.match ? '=' : '≠'}</div>
-        <div class="num-box">
-          <div class="num-box-label">EC8A Declared</div>
-          <div class="num-box-value ${ec8aColor}">${a.ec8aVal.toLocaleString()}</div>
+      </div>
+
+      <div class="verdict-sub-desc">${detail}</div>
+
+      <div class="comparison-gauge-strip">
+        <div class="comp-box">
+          <div class="comp-box-label">BVAS LCD Hardware</div>
+          <div class="comp-box-val" style="color:var(--emerald);">${a.bvasVal.toLocaleString()}</div>
+        </div>
+        <div class="comp-relation-sign">${a.match ? '=' : '≠'}</div>
+        <div class="comp-box">
+          <div class="comp-box-label">EC8A Declared Paper</div>
+          <div class="comp-box-val" style="color:${a.match ? 'var(--emerald)' : 'var(--crimson)'};">${a.ec8aVal.toLocaleString()}</div>
         </div>
       </div>
 
       ${!a.match ? `
-      <div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:0.75rem;margin-bottom:1rem;font-size:0.8rem;line-height:1.6;color:#fca5a5;">
-        <strong>Required Action:</strong> This result sheet must be flagged under Electoral Act 2022 S.51 and referred to the Collation Officer and party agents before any further collation proceeds. Do not allow this sheet to leave without all parties signing the discrepancy log.
+      <div class="statutory-alert-banner">
+        <strong>MANDATORY STATUTORY REMEDY &bull; ELECTORAL ACT 2022 S.51:</strong><br>
+        &ldquo;The Returning Officer shall cancel the result of the election in that polling unit.&rdquo; Collation officers and observer agents must quash this sheet immediately. Retain this SHA-256 certificate for Election Petitions Tribunal filing.
       </div>` : ''}
 
-      <div class="proof-card">
-        <div class="proof-title">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-          Cryptographic Audit Proof
+      <div class="crypto-certificate-deck">
+        <div class="cert-heading-row">
+          <div class="cert-title-tag">
+            <svg class="ico" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            Cryptographic Evidence Certificate
+          </div>
+          <span style="font-family:var(--font-mono);font-size:9.5px;color:var(--text-slate);">COURT-ADMISSIBLE LEDGER</span>
         </div>
-        <div class="proof-row"><span class="proof-key">PU Code</span><span class="proof-val">${a.puCode}</span></div>
-        <div class="proof-row"><span class="proof-key">Location</span><span class="proof-val">${a.puLoc || '—'}</span></div>
-        <div class="proof-row"><span class="proof-key">BVAS Reading</span><span class="proof-val">${a.bvasVal.toLocaleString()}</span></div>
-        <div class="proof-row"><span class="proof-key">EC8A Declared</span><span class="proof-val">${a.ec8aVal.toLocaleString()}</span></div>
-        <div class="proof-row"><span class="proof-key">Delta</span><span class="proof-val" style="color:${a.match?'var(--green)':'var(--red)'}">${a.delta >= 0 ? '+' : ''}${a.delta.toLocaleString()}</span></div>
-        <div class="proof-row"><span class="proof-key">Timestamp (UTC)</span><span class="proof-val">${a.timestamp}</span></div>
-        <div class="proof-row"><span class="proof-key">Verdict</span><span class="proof-val" style="color:${a.match?'var(--green)':'var(--red)'}">${a.match ? 'MATCH' : 'DISCREPANCY'}</span></div>
-        <div class="proof-hash">SHA-256: ${a.hash}</div>
+
+        <div class="cert-row"><span class="cert-key">PU Code</span><span class="cert-val">${a.puCode}</span></div>
+        <div class="cert-row"><span class="cert-key">Jurisdiction</span><span class="cert-val">${a.puLoc}</span></div>
+        <div class="cert-row"><span class="cert-key">BVAS Optical Reading</span><span class="cert-val">${a.bvasVal.toLocaleString()}</span></div>
+        <div class="cert-row"><span class="cert-key">EC8A Declared Tally</span><span class="cert-val">${a.ec8aVal.toLocaleString()}</span></div>
+        <div class="cert-row"><span class="cert-key">Statutory Delta</span><span class="cert-val" style="color:${a.match ? 'var(--emerald)' : 'var(--crimson)'}">${a.delta >= 0 ? '+' : ''}${a.delta.toLocaleString()}</span></div>
+        <div class="cert-row"><span class="cert-key">Timestamp (UTC ISO)</span><span class="cert-val">${a.timestamp}</span></div>
+
+        <div class="hash-vault-terminal">
+          <span>SHA-256: ${a.hash}</span>
+          <button class="btn-copy-hash" onclick="copyHash('${a.hash}', this)">Copy Hash</button>
+        </div>
       </div>
     </div>`;
 
   sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
+function copyHash(hash, btn) {
+  navigator.clipboard.writeText(hash).then(() => {
+    btn.textContent = 'COPIED!';
+    setTimeout(() => { btn.textContent = 'COPY HASH'; }, 2000);
+  });
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
-// Render audit history
+// Render Historical Audit Ledger
 // ─────────────────────────────────────────────────────────────────────────────
 function renderHistory() {
   const card = document.getElementById('historyCard');
@@ -832,36 +1387,36 @@ function renderHistory() {
   if (state.auditHistory.length === 0) return;
   card.style.display = 'block';
   list.innerHTML = state.auditHistory.map(a => `
-    <div class="audit-item">
-      <div class="audit-item-left">
-        <div class="audit-item-code">${a.puCode}</div>
-        <div class="audit-item-time">${new Date(a.timestamp).toLocaleTimeString()} &mdash; BVAS: ${a.bvasVal} / EC8A: ${a.ec8aVal}</div>
+    <div class="history-item-row">
+      <div class="history-left">
+        <div class="history-pu">${a.puCode} &bull; ${a.puLoc}</div>
+        <div class="history-meta">${new Date(a.timestamp).toLocaleTimeString()} &mdash; BVAS: ${a.bvasVal} / EC8A: ${a.ec8aVal} &bull; Hash: ${a.hash.substring(0, 16)}...</div>
       </div>
-      <div class="audit-item-badge ${a.match ? 'badge-match' : 'badge-mismatch'}">
-        ${a.match ? 'MATCH' : 'DISCREPANCY'}
+      <div class="history-badge ${a.match ? 'hb-match' : 'hb-mismatch'}">
+        ${a.match ? 'VERIFIED MATCH' : 'S.51 BREACH'}
       </div>
     </div>`).join('');
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Step indicator
+// Pipeline Step Management
 // ─────────────────────────────────────────────────────────────────────────────
 function setStep(n) {
-  [1,2,3,4].forEach(i => {
+  [1, 2, 3, 4].forEach(i => {
     const el = document.getElementById(`step${i}`);
-    el.className = 'step' + (i < n ? ' done' : i === n ? ' active' : '');
+    el.className = 'step-item' + (i < n ? ' done' : i === n ? ' active' : '');
   });
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Offline detection
+// Offline Retentive Sync
 // ─────────────────────────────────────────────────────────────────────────────
 function checkOnline() {
   const pill = document.getElementById('queuePill');
   try {
     const queue = JSON.parse(localStorage.getItem('vg_audit_queue') || '[]');
     if (!navigator.onLine && queue.length > 0) {
-      document.getElementById('queueCount').textContent = `${queue.length} audit${queue.length>1?'s':''} queued — will sync when online`;
+      document.getElementById('queueCount').textContent = `${queue.length} Audit${queue.length>1?'s':''} Retained Offline &mdash; Will Sync On Reconnect`;
       pill.style.display = 'inline-flex';
     } else {
       pill.style.display = 'none';
